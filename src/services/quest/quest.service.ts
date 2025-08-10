@@ -5,6 +5,8 @@ import {
   doc,
   getDocs,
   getDoc,
+  setDoc,
+  updateDoc,
   query,
   where,
   orderBy,
@@ -104,19 +106,108 @@ export const questService = {
     }
   },
 
-  // Seed quests (for initial data population)
-  async seedQuests(quests: Omit<Quest, 'id' | 'createdAt' | 'updatedAt'>[]): Promise<void> {
-    const batch = writeBatch(db);
-    
-    quests.forEach((quest) => {
+  // Create a new quest
+  async createQuest(questData: Omit<Quest, 'id' | 'createdAt' | 'updatedAt'>): Promise<string> {
+    try {
       const questRef = doc(collection(db, 'quests'));
-      batch.set(questRef, {
-        ...quest,
+      const newQuest = {
+        ...questData,
+        isActive: true,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
-      });
-    });
+      };
+      
+      await setDoc(questRef, newQuest);
+      return questRef.id;
+    } catch (error) {
+      console.error('Error creating quest:', error);
+      throw error;
+    }
+  },
 
-    await batch.commit();
+  // Update an existing quest
+  async updateQuest(questId: string, updateData: Partial<Omit<Quest, 'id' | 'createdAt'>>): Promise<void> {
+    try {
+      const questRef = doc(db, 'quests', questId);
+      await updateDoc(questRef, {
+        ...updateData,
+        updatedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error('Error updating quest:', error);
+      throw error;
+    }
+  },
+
+  // Delete a quest (soft delete by setting isActive to false)
+  async deleteQuest(questId: string): Promise<void> {
+    try {
+      const questRef = doc(db, 'quests', questId);
+      await updateDoc(questRef, {
+        isActive: false,
+        updatedAt: serverTimestamp()
+      });
+    } catch (error) {
+      console.error('Error deleting quest:', error);
+      throw error;
+    }
+  },
+
+  // Seed quests (for initial data population)
+  async seedQuests(quests?: Omit<Quest, 'id' | 'createdAt' | 'updatedAt'>[]): Promise<void> {
+    try {
+      const batch = writeBatch(db);
+      
+      // Default quests if none provided
+      const defaultQuests = quests || [
+        {
+          title: 'Explore Your First Career',
+          description: 'Browse through career options and save your first career interest',
+          difficulty: 'beginner',
+          xpReward: 50,
+          estimatedHours: 1,
+          category: 'career_exploration',
+          relatedSkills: ['research', 'decision_making'],
+          prerequisites: [],
+          isActive: true
+        },
+        {
+          title: 'Complete Your Profile',
+          description: 'Fill out your complete user profile including skills and interests',
+          difficulty: 'beginner',
+          xpReward: 75,
+          estimatedHours: 1,
+          category: 'profile_building',
+          relatedSkills: ['self_awareness', 'communication'],
+          prerequisites: [],
+          isActive: true
+        },
+        {
+          title: 'Skill Assessment Challenge',
+          description: 'Take a comprehensive skills assessment to identify your strengths',
+          difficulty: 'intermediate',
+          xpReward: 150,
+          estimatedHours: 3,
+          category: 'skill_development',
+          relatedSkills: ['self_assessment', 'critical_thinking'],
+          prerequisites: ['profile_completion'],
+          isActive: true
+        }
+      ];
+      
+      defaultQuests.forEach((quest) => {
+        const questRef = doc(collection(db, 'quests'));
+        batch.set(questRef, {
+          ...quest,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+      });
+
+      await batch.commit();
+    } catch (error) {
+      console.error('Error seeding quests:', error);
+      throw error;
+    }
   }
 };

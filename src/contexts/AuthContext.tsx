@@ -19,9 +19,23 @@ import {
   Timestamp
 } from 'firebase/firestore';
 import { auth, db } from '../firebase/config';
+import { careerService } from '../services';
 
 // User role types
 export type UserRole = 'user' | 'admin' | 'super_admin';
+
+// Career progress tracking
+export interface CareerProgress {
+  careerId: string;
+  careerTitle: string;
+  isActive: boolean;
+  progressPercentage: number;
+  skillsCompleted: number;
+  skillsTotal: number;
+  estimatedCompletionMonths: number;
+  startedAt: Date;
+  lastUpdated: Date;
+}
 
 // User profile interface
 export interface UserProfile {
@@ -34,10 +48,17 @@ export interface UserProfile {
   xp: number;
   totalXP: number;
   currentCareerPath?: string;
+  careerPaths: CareerProgress[];
   completedQuests: string[];
   activeQuests: string[];
   unlockedAchievements: string[];
   skillHours: Record<string, number>;
+  skillProficiencies: Record<string, number>; // skill_id -> proficiency level (1-5)
+  learningPreferences: {
+    preferredDifficulty: 'beginner' | 'intermediate' | 'advanced';
+    timeCommitmentHours: number; // weekly hours
+    focusAreas: string[]; // skill categories of interest
+  };
   createdAt: Date;
   lastActive: Date;
 }
@@ -54,7 +75,12 @@ interface AuthContextType {
   addXP: (amount: number) => Promise<void>;
   isAdmin: () => boolean;
   isSuperAdmin: () => boolean;
-  completeQuest: (questId: string, xpReward: number) => Promise<void>;
+  completeQuest: (questId: string, xpReward: number, skillRewards?: Array<{skillId: string; hoursAwarded: number}>) => Promise<void>;
+  addCareerPath: (careerId: string, careerTitle: string) => Promise<void>;
+  updateCareerProgress: (careerId: string, updates: Partial<CareerProgress>) => Promise<void>;
+  setActiveCareerPath: (careerId: string) => Promise<void>;
+  updateSkillProficiency: (skillId: string, level: number) => Promise<void>;
+  updateCareerProgressFromSkills: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -106,10 +132,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         level: 1,
         xp: 0,
         totalXP: 0,
+        careerPaths: [],
         completedQuests: [],
         activeQuests: [],
         unlockedAchievements: ['welcome-badge'], // Give welcome achievement
         skillHours: {},
+        skillProficiencies: {},
+        learningPreferences: {
+          preferredDifficulty: 'beginner' as const,
+          timeCommitmentHours: 5, // 5 hours per week default
+          focusAreas: []
+        },
         createdAt: serverTimestamp(),
         lastActive: serverTimestamp()
       };
@@ -138,10 +171,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         level: 1,
         xp: 0,
         totalXP: 0,
+        careerPaths: [],
         completedQuests: [],
         activeQuests: [],
         unlockedAchievements: ['welcome-badge'],
         skillHours: {},
+        skillProficiencies: {},
+        learningPreferences: {
+          preferredDifficulty: 'beginner' as const,
+          timeCommitmentHours: 5,
+          focusAreas: []
+        },
         createdAt: new Date(),
         lastActive: new Date(),
         ...removeUndefinedFields(additionalData || {})
@@ -167,10 +207,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         xp: userData.xp || 0,
         totalXP: userData.totalXP || 0,
         currentCareerPath: userData.currentCareerPath,
+        careerPaths: userData.careerPaths || [],
         completedQuests: userData.completedQuests || [],
         activeQuests: userData.activeQuests || [],
         unlockedAchievements: userData.unlockedAchievements || [],
         skillHours: userData.skillHours || {},
+        skillProficiencies: userData.skillProficiencies || {},
+        learningPreferences: userData.learningPreferences || {
+          preferredDifficulty: 'beginner' as const,
+          timeCommitmentHours: 5,
+          focusAreas: []
+        },
         createdAt: userData.createdAt instanceof Timestamp ? userData.createdAt.toDate() : new Date(),
         lastActive: userData.lastActive instanceof Timestamp ? userData.lastActive.toDate() : new Date()
       };
@@ -247,17 +294,161 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     await updateUserProfile(updates);
   };
 
-  const completeQuest = async (questId: string, xpReward: number) => {
+  const completeQuest = async (questId: string, xpReward: number, skillRewards?: Array<{skillId: string; hoursAwarded: number}>) => {
     if (!currentUser || !userProfile) return;
 
     const updatedCompletedQuests = [...userProfile.completedQuests, questId];
     const updatedActiveQuests = userProfile.activeQuests.filter(id => id !== questId);
 
+    // Update skill hours if skill rewards are provided
+    let updatedSkillHours = { ...userProfile.skillHours };
+    let updatedSkillProficiencies = { ...userProfile.skillProficiencies };
+    
+    if (skillRewards) {
+      for (const skillReward of skillRewards) {
+        // Add hours to skill
+        const currentHours = updatedSkillHours[skillReward.skillId] || 0;
+        const newHours = currentHours + skillReward.hoursAwarded;
+        updatedSkillHours[skillReward.skillId] = newHours;
+        
+        // Auto-advance skill proficiency based on hours
+        const currentProficiency = updatedSkillProficiencies[skillReward.skillId] || 1;
+        let newProficiency = currentProficiency;
+        
+        // Simple progression: every 20 hours = 1 proficiency level (max 5)
+        if (newHours >= 100 && currentProficiency < 5) newProficiency = 5; // Expert
+        else if (newHours >= 60 && currentProficiency < 4) newProficiency = 4; // Advanced
+        else if (newHours >= 35 && currentProficiency < 3) newProficiency = 3; // Intermediate
+        else if (newHours >= 15 && currentProficiency < 2) newProficiency = 2; // Beginner
+        
+        if (newProficiency > currentProficiency) {
+          updatedSkillProficiencies[skillReward.skillId] = newProficiency;
+        }
+      }
+    }
+
     await addXP(xpReward);
     await updateUserProfile({
       completedQuests: updatedCompletedQuests,
-      activeQuests: updatedActiveQuests
+      activeQuests: updatedActiveQuests,
+      skillHours: updatedSkillHours,
+      skillProficiencies: updatedSkillProficiencies
     });
+
+    // Update career progress for all active career paths
+    await updateCareerProgressFromSkills();
+  };
+
+  // Career Path Management Methods
+  const addCareerPath = async (careerId: string, careerTitle: string) => {
+    if (!currentUser || !userProfile) return;
+
+    const existingPath = userProfile.careerPaths.find(path => path.careerId === careerId);
+    if (existingPath) return; // Already exists
+
+    const newCareerPath: CareerProgress = {
+      careerId,
+      careerTitle,
+      isActive: false,
+      progressPercentage: 0,
+      skillsCompleted: 0,
+      skillsTotal: 0, // Will be calculated based on career requirements
+      estimatedCompletionMonths: 12, // Default estimate
+      startedAt: new Date(),
+      lastUpdated: new Date()
+    };
+
+    const updatedCareerPaths = [...userProfile.careerPaths, newCareerPath];
+    await updateUserProfile({ careerPaths: updatedCareerPaths });
+  };
+
+  const updateCareerProgress = async (careerId: string, updates: Partial<CareerProgress>) => {
+    if (!currentUser || !userProfile) return;
+
+    const updatedCareerPaths = userProfile.careerPaths.map(path =>
+      path.careerId === careerId 
+        ? { ...path, ...updates, lastUpdated: new Date() }
+        : path
+    );
+
+    await updateUserProfile({ careerPaths: updatedCareerPaths });
+  };
+
+  const setActiveCareerPath = async (careerId: string) => {
+    if (!currentUser || !userProfile) return;
+
+    // Set all paths to inactive, then set the selected one as active
+    const updatedCareerPaths = userProfile.careerPaths.map(path => ({
+      ...path,
+      isActive: path.careerId === careerId,
+      lastUpdated: new Date()
+    }));
+
+    await updateUserProfile({ 
+      currentCareerPath: careerId,
+      careerPaths: updatedCareerPaths 
+    });
+  };
+
+  const updateSkillProficiency = async (skillId: string, level: number) => {
+    if (!currentUser || !userProfile) return;
+
+    const updatedProficiencies = {
+      ...userProfile.skillProficiencies,
+      [skillId]: level
+    };
+
+    await updateUserProfile({ skillProficiencies: updatedProficiencies });
+  };
+
+  const updateCareerProgressFromSkills = async () => {
+    if (!currentUser || !userProfile) return;
+
+    const updatedCareerPaths = await Promise.all(
+      userProfile.careerPaths.map(async (careerPath) => {
+        try {
+          // Get career details to understand skill requirements
+          const career = await careerService.getCareer(careerPath.careerId);
+          if (!career) return careerPath;
+
+          // Calculate progress based on user's skill proficiencies vs career requirements
+          let skillsCompleted = 0;
+          const totalSkills = career.skills.length;
+
+          for (const careerSkill of career.skills) {
+            const skillId = `${careerSkill.skillName.toLowerCase().replace(/\s+/g, '_')}`;
+            const userProficiency = userProfile.skillProficiencies[skillId] || 0;
+            const requiredLevel = careerSkill.proficiencyLevel || 3; // Default to intermediate
+
+            if (userProficiency >= requiredLevel) {
+              skillsCompleted++;
+            }
+          }
+
+          const progressPercentage = totalSkills > 0 ? Math.round((skillsCompleted / totalSkills) * 100) : 0;
+          
+          // Estimate completion time based on remaining skills and user's time commitment
+          const remainingSkills = totalSkills - skillsCompleted;
+          const weeklyHours = userProfile.learningPreferences.timeCommitmentHours;
+          const estimatedWeeks = remainingSkills * 4; // 4 weeks per skill average
+          const estimatedMonths = Math.ceil(estimatedWeeks / 4);
+
+          return {
+            ...careerPath,
+            progressPercentage,
+            skillsCompleted,
+            skillsTotal: totalSkills,
+            estimatedCompletionMonths: Math.max(1, estimatedMonths),
+            lastUpdated: new Date()
+          };
+        } catch (error) {
+          console.error('Error updating career progress:', error);
+          return careerPath;
+        }
+      })
+    );
+
+    await updateUserProfile({ careerPaths: updatedCareerPaths });
   };
 
   const updateUserProfile = async (updates: Partial<UserProfile>) => {
@@ -327,7 +518,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     addXP,
     completeQuest,
     isAdmin,
-    isSuperAdmin
+    isSuperAdmin,
+    addCareerPath,
+    updateCareerProgress,
+    setActiveCareerPath,
+    updateSkillProficiency,
+    updateCareerProgressFromSkills
   };
 
   return (

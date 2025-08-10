@@ -44,5 +44,43 @@ service cloud.firestore {
       allow read, write: if request.auth != null && 
         resource.data.userId == request.auth.uid;
     }
+    
+    // User skill progress - users can read/write their own skill data
+    match /user-skills/{userSkillDoc} {
+      allow read, write: if request.auth != null && 
+        resource.data.userId == request.auth.uid;
+      allow create: if request.auth != null && 
+        request.resource.data.userId == request.auth.uid;
+    }
+    
+    // Hard skills - anyone can read, only admins can write
+    match /hard-skills/{hardSkillDoc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // Certifications - anyone can read, only admins can write
+    match /certifications/{certificationDoc} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // User certifications - users can read/write their own
+    match /user-certifications/{userCertificationDoc} {
+      allow read, write: if request.auth != null && 
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // Career paths - users can read/write their own
+    match /career-paths/{careerPathDoc} {
+      allow read, write: if request.auth != null && 
+        resource.data.userId == request.auth.uid;
+    }
+    
+    // Skill assessments - users can read/write their own
+    match /skill-assessments/{assessmentDoc} {
+      allow read, write: if request.auth != null && 
+        resource.data.userId == request.auth.uid;
+    }
   }
 }

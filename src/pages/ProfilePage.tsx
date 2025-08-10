@@ -33,9 +33,13 @@ import {
   Cancel,
   GamepadOutlined,
   AccountCircle,
+  Work,
+  Add,
+  CheckCircle,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import CharacterSheet from '../components/CharacterSheet';
+import { careerService } from '../services';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -60,7 +64,7 @@ function TabPanel(props: TabPanelProps) {
 }
 
 const ProfilePage: React.FC = () => {
-  const { currentUser, userProfile, updateUserProfile } = useAuth();
+  const { currentUser, userProfile, updateUserProfile, addCareerPath, setActiveCareerPath } = useAuth();
   const [tabValue, setTabValue] = useState(0);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [editData, setEditData] = useState({
@@ -68,9 +72,46 @@ const ProfilePage: React.FC = () => {
     currentCareerPath: userProfile?.currentCareerPath || '',
   });
   const [saving, setSaving] = useState(false);
+  const [careers, setCareers] = useState<any[]>([]);
+  const [loadingCareers, setLoadingCareers] = useState(false);
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
+    // Load careers when Career Paths tab is selected
+    if (newValue === 2 && careers.length === 0) {
+      loadCareers();
+    }
+  };
+
+  // Load available careers
+  const loadCareers = async () => {
+    setLoadingCareers(true);
+    try {
+      const { careers: careerList } = await careerService.getCareers(20);
+      setCareers(careerList);
+    } catch (error) {
+      console.error('Error loading careers:', error);
+    } finally {
+      setLoadingCareers(false);
+    }
+  };
+
+  // Add a career path to user's profile
+  const handleAddCareerPath = async (careerId: string, careerTitle: string) => {
+    try {
+      await addCareerPath(careerId, careerTitle);
+    } catch (error) {
+      console.error('Error adding career path:', error);
+    }
+  };
+
+  // Set active career path
+  const handleSetActiveCareer = async (careerId: string) => {
+    try {
+      await setActiveCareerPath(careerId);
+    } catch (error) {
+      console.error('Error setting active career:', error);
+    }
   };
 
   if (!currentUser || !userProfile) {
@@ -145,6 +186,12 @@ const ProfilePage: React.FC = () => {
             icon={<AccountCircle />} 
             iconPosition="start"
             id="profile-tab-1" 
+          />
+          <Tab 
+            label="Career Paths" 
+            icon={<Work />} 
+            iconPosition="start"
+            id="profile-tab-2" 
           />
         </Tabs>
       </Box>
@@ -393,6 +440,107 @@ const ProfilePage: React.FC = () => {
       </Dialog>
       
       </TabPanel> {/* Close Profile Details Tab */}
+
+      {/* Career Paths Tab */}
+      <TabPanel value={tabValue} index={2}>
+        <Grid container spacing={3}>
+          {/* Active Career Paths */}
+          <Grid item xs={12} md={6}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Your Career Paths
+                </Typography>
+                {userProfile.careerPaths.length === 0 ? (
+                  <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+                    No career paths selected yet. Browse available careers to get started!
+                  </Typography>
+                ) : (
+                  <List>
+                    {userProfile.careerPaths.map((careerPath) => (
+                      <ListItem key={careerPath.careerId} sx={{ px: 0 }}>
+                        <ListItemIcon>
+                          {careerPath.isActive ? (
+                            <CheckCircle color="success" />
+                          ) : (
+                            <Work color="disabled" />
+                          )}
+                        </ListItemIcon>
+                        <ListItemText
+                          primary={careerPath.careerTitle}
+                          secondary={
+                            <Box>
+                              <Typography variant="caption" display="block">
+                                Progress: {careerPath.progressPercentage}%
+                              </Typography>
+                              <LinearProgress
+                                variant="determinate"
+                                value={careerPath.progressPercentage}
+                                sx={{ mt: 1 }}
+                              />
+                            </Box>
+                          }
+                        />
+                        {!careerPath.isActive && (
+                          <Button
+                            size="small"
+                            onClick={() => handleSetActiveCareer(careerPath.careerId)}
+                          >
+                            Set Active
+                          </Button>
+                        )}
+                      </ListItem>
+                    ))}
+                  </List>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Available Careers */}
+          <Grid item xs={12} md={6}>
+            <Card>
+              <CardContent>
+                <Typography variant="h6" gutterBottom>
+                  Explore Careers
+                </Typography>
+                {loadingCareers ? (
+                  <Typography>Loading careers...</Typography>
+                ) : (
+                  <List sx={{ maxHeight: 400, overflow: 'auto' }}>
+                    {careers.map((career) => {
+                      const isAlreadyAdded = userProfile.careerPaths.some(
+                        path => path.careerId === career.id
+                      );
+                      return (
+                        <ListItem key={career.id} sx={{ px: 0 }}>
+                          <ListItemText
+                            primary={career.title}
+                            secondary={
+                              <Typography variant="caption" display="block">
+                                {career.description?.substring(0, 100)}...
+                              </Typography>
+                            }
+                          />
+                          <Button
+                            size="small"
+                            startIcon={<Add />}
+                            disabled={isAlreadyAdded}
+                            onClick={() => handleAddCareerPath(career.id, career.title)}
+                          >
+                            {isAlreadyAdded ? 'Added' : 'Add Path'}
+                          </Button>
+                        </ListItem>
+                      );
+                    })}
+                  </List>
+                )}
+              </CardContent>
+            </Card>
+          </Grid>
+        </Grid>
+      </TabPanel> {/* Close Career Paths Tab */}
+      
     </Box>
   );
 };

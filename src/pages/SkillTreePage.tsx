@@ -4,9 +4,6 @@ import {
   Typography,
   Tabs,
   Tab,
-  Card,
-  CardContent,
-  Grid,
   Chip,
 } from '@mui/material';
 import {
@@ -16,6 +13,7 @@ import {
   Psychology,
 } from '@mui/icons-material';
 import SkillTree from '../components/SkillTree';
+import { useAuth } from '../contexts/AuthContext';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -37,106 +35,98 @@ function TabPanel(props: TabPanelProps) {
   );
 }
 
+const skillPaths = [
+  {
+    id: 'general',
+    name: 'General Skills',
+    icon: <Psychology />,
+    description: 'Foundational skills for any career path',
+    color: 'primary'
+  },
+  {
+    id: 'software-developer',
+    name: 'Software Developer',
+    icon: <Code />,
+    description: 'Full-stack development skills and programming mastery',
+    color: 'secondary'
+  },
+  {
+    id: 'data-scientist',
+    name: 'Data Scientist',
+    icon: <Analytics />,
+    description: 'Data analysis, machine learning, and statistical modeling',
+    color: 'success'
+  },
+  {
+    id: 'ux-designer',
+    name: 'UX Designer',
+    icon: <Palette />,
+    description: 'User experience design and research skills',
+    color: 'warning'
+  }
+];
+
 const SkillTreePage: React.FC = () => {
-  const [tabValue, setTabValue] = useState(0);
+  const { userProfile } = useAuth();
+  
+  // Set default tab based on user's active career path
+  const getDefaultTab = () => {
+    if (!userProfile?.currentCareerPath) return 0;
+    const activeCareer = userProfile.careerPaths.find(path => path.isActive);
+    if (!activeCareer) return 0;
+    
+    const pathIndex = skillPaths.findIndex(path => path.id === activeCareer.careerId);
+    return pathIndex >= 0 ? pathIndex : 0;
+  };
+  
+  const [tabValue, setTabValue] = useState(() => getDefaultTab());
 
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
   };
 
-  const skillPaths = [
-    {
-      id: 'general',
-      name: 'General Skills',
-      icon: <Psychology />,
-      description: 'Foundational skills for any career path',
-      color: 'primary'
-    },
-    {
-      id: 'software-developer',
-      name: 'Software Developer',
-      icon: <Code />,
-      description: 'Full-stack development skills and programming mastery',
-      color: 'secondary'
-    },
-    {
-      id: 'data-scientist',
-      name: 'Data Scientist',
-      icon: <Analytics />,
-      description: 'Data analysis, machine learning, and statistical modeling',
-      color: 'success'
-    },
-    {
-      id: 'ux-designer',
-      name: 'UX Designer',
-      icon: <Palette />,
-      description: 'User experience design and research skills',
-      color: 'warning'
-    }
-  ];
-
   return (
     <Box>
-      <Typography variant="h3" component="h1" gutterBottom>
-        Skill Trees 🌳
-      </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-        Explore different career skill trees and track your progression through interactive learning paths.
-      </Typography>
-
-      {/* Skill Path Overview */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        {skillPaths.map((path, index) => (
-          <Grid item xs={12} sm={6} md={3} key={path.id}>
-            <Card 
-              sx={{ 
-                height: '100%',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                border: tabValue === index ? '2px solid' : '1px solid transparent',
-                borderColor: tabValue === index ? `${path.color}.main` : 'transparent',
-                '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: (theme) => theme.shadows[4]
+      {/* Career Path Tabs */}
+      <Box sx={{ mb: 3 }}>
+        <Tabs 
+          value={tabValue} 
+          onChange={handleTabChange} 
+          variant="fullWidth"
+          sx={{
+            '& .MuiTab-root': {
+              fontFamily: '"Nacelle", sans-serif',
+              fontWeight: 600,
+              textTransform: 'none',
+              fontSize: '0.9rem'
+            }
+          }}
+        >
+          {skillPaths.map((path, index) => {
+            const isActiveCareer = userProfile?.careerPaths.some(
+              cp => cp.careerId === path.id && cp.isActive
+            );
+            return (
+              <Tab
+                key={path.id}
+                label={
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    {path.name}
+                    {isActiveCareer && (
+                      <Chip
+                        label="Active"
+                        size="small"
+                        color="success"
+                        sx={{ fontSize: '0.6rem', height: 20 }}
+                      />
+                    )}
+                  </Box>
                 }
-              }}
-              onClick={() => setTabValue(index)}
-            >
-              <CardContent sx={{ textAlign: 'center' }}>
-                <Box sx={{ color: `${path.color}.main`, mb: 2 }}>
-                  {React.cloneElement(path.icon, { sx: { fontSize: 40 } })}
-                </Box>
-                <Typography variant="h6" gutterBottom>
-                  {path.name}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  {path.description}
-                </Typography>
-                {tabValue === index && (
-                  <Chip 
-                    label="Currently Viewing" 
-                    color={path.color as any}
-                    size="small" 
-                    sx={{ mt: 2 }}
-                  />
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-        ))}
-      </Grid>
-
-      {/* Tab Navigation */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs value={tabValue} onChange={handleTabChange} variant="scrollable" scrollButtons="auto">
-          {skillPaths.map((path) => (
-            <Tab
-              key={path.id}
-              label={path.name}
-              icon={path.icon}
-              iconPosition="start"
-            />
-          ))}
+                icon={path.icon}
+                iconPosition="start"
+              />
+            );
+          })}
         </Tabs>
       </Box>
 

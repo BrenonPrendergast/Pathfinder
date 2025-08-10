@@ -15,9 +15,11 @@
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^5.15.10",
     "@mui/material": "^5.15.10",
+    "@types/aos": "^3.0.7",
     "@types/node": "^18.15.0",
     "@types/react": "^18.0.0",
     "@types/react-dom": "^18.0.0",
+    "aos": "^2.3.4",
     "firebase": "^12.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -27,7 +29,8 @@
     "web-vitals": "^2.1.4"
   },
   "devDependencies": {
-    "@types/node": "^24.2.0"
+    "@types/node": "^24.2.0",
+    "firebase-admin": "^13.4.0"
   },
   "eslintConfig": {
     "extends": [

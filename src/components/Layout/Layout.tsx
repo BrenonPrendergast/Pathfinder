@@ -33,6 +33,7 @@ import {
   Login,
   TrendingUp,
   AdminPanelSettings,
+  Psychology,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
@@ -106,6 +107,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { name: 'Dashboard', path: '/dashboard', icon: Dashboard, public: false },
     { name: 'Quests', path: '/quests', icon: Assignment, public: false },
     { name: 'Skill Tree', path: '/skill-tree', icon: TrendingUp, public: false },
+    { name: 'Career Match', path: '/career-recommendations', icon: Psychology, public: false },
     { name: 'Achievements', path: '/achievements', icon: EmojiEvents, public: false },
     { name: 'Profile', path: '/profile', icon: Person, public: false },
     { name: 'Admin', path: '/admin', icon: AdminPanelSettings, public: false, adminOnly: true },
@@ -178,16 +180,46 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                   sx={{
                     mx: 1,
                     mb: 0.5,
-                    borderRadius: 1,
+                    borderRadius: 2,
+                    transition: 'all 0.3s ease',
+                    fontFamily: '"Nacelle", sans-serif',
+                    '&:hover': {
+                      backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                      transform: 'translateX(4px)',
+                      '& .MuiListItemIcon-root': {
+                        color: '#6366f1',
+                      },
+                      '& .MuiListItemText-primary': {
+                        color: '#6366f1',
+                        fontWeight: 600,
+                      },
+                    },
                     '&.Mui-selected': {
-                      backgroundColor: theme.palette.primary.main,
+                      background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
                       color: 'white',
+                      boxShadow: '0 4px 12px rgba(99, 102, 241, 0.3)',
                       '&:hover': {
-                        backgroundColor: theme.palette.primary.dark,
+                        background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+                        transform: 'translateX(0px)',
                       },
                       '& .MuiListItemIcon-root': {
                         color: 'white',
                       },
+                      '& .MuiListItemText-primary': {
+                        color: 'white',
+                        fontWeight: 600,
+                      },
+                    },
+                    '& .MuiListItemIcon-root': {
+                      color: '#9ca3af', // Lighter gray for better visibility
+                      minWidth: 44,
+                      transition: 'color 0.3s ease',
+                    },
+                    '& .MuiListItemText-primary': {
+                      fontFamily: '"Nacelle", sans-serif',
+                      fontWeight: 500,
+                      color: 'text.primary',
+                      transition: 'all 0.3s ease',
                     },
                   }}
                 >

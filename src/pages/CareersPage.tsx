@@ -341,46 +341,130 @@ const CareersPage: React.FC = () => {
           Discover over 1,000 career opportunities from the O*NET database. Search by keywords or browse by industry field.
         </Typography>
 
-        {/* Search Bar */}
-        <TextField
-          fullWidth
-          placeholder="Search careers, skills, or job descriptions... (try 'actors', 'software', 'nurse')"
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          sx={{ mb: 4 }}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                {searching ? <CircularProgress size={20} /> : <Search />}
-              </InputAdornment>
-            ),
-          }}
-        />
+        {/* Search Bar and Career Field Selector - Side by Side */}
+        <Box sx={{ 
+          display: 'flex', 
+          gap: 3, 
+          mb: 4,
+          flexDirection: { xs: 'column', md: 'row' },
+          alignItems: { xs: 'stretch', md: 'flex-start' }
+        }}>
+          {/* Search Bar */}
+          <TextField
+            placeholder="Search careers, skills, or job descriptions... (try 'actors', 'software', 'nurse')"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            sx={{ 
+              flex: 2,
+              '& .MuiOutlinedInput-root': {
+                backgroundColor: 'rgba(99, 102, 241, 0.05)',
+                border: '2px solid #6366f1',
+                borderRadius: 2,
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  borderColor: '#8b5cf6',
+                  backgroundColor: 'rgba(139, 92, 246, 0.08)',
+                },
+                '&.Mui-focused': {
+                  borderColor: '#6366f1',
+                  backgroundColor: 'rgba(99, 102, 241, 0.08)',
+                  boxShadow: '0 0 0 3px rgba(99, 102, 241, 0.2)',
+                },
+                '& fieldset': {
+                  border: 'none',
+                },
+              },
+              '& .MuiInputBase-input': {
+                fontFamily: '"Nacelle", sans-serif',
+                fontSize: '0.95rem',
+                fontWeight: 500,
+              },
+            }}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Box sx={{ 
+                    color: '#6366f1',
+                    display: 'flex',
+                    alignItems: 'center'
+                  }}>
+                    {searching ? <CircularProgress size={20} sx={{ color: '#6366f1' }} /> : <Search />}
+                  </Box>
+                </InputAdornment>
+              ),
+            }}
+          />
 
-        {/* Career Field Selector */}
-        <Box sx={{ mb: 4, maxWidth: 600 }}>
-          <FormControl fullWidth>
-            <InputLabel>Select Career Field (Optional)</InputLabel>
+          {/* Career Field Selector */}
+          <FormControl sx={{ flex: 1, minWidth: 280 }}>
+            <InputLabel 
+              sx={{ 
+                fontFamily: '"Nacelle", sans-serif',
+                fontWeight: 500,
+                color: '#6366f1',
+                '&.Mui-focused': {
+                  color: '#6366f1',
+                }
+              }}
+            >
+              Career Field
+            </InputLabel>
             <Select
               value={selectedField || ''}
-              label="Select Career Field (Optional)"
+              label="Career Field"
               onChange={(e) => handleFieldSelect(e.target.value as CareerFieldKey)}
-              sx={{ mb: 2 }}
+              sx={{
+                backgroundColor: 'rgba(99, 102, 241, 0.05)',
+                border: '2px solid #6366f1',
+                borderRadius: 2,
+                fontFamily: '"Nacelle", sans-serif',
+                fontWeight: 500,
+                transition: 'all 0.3s ease',
+                '&:hover': {
+                  borderColor: '#8b5cf6',
+                  backgroundColor: 'rgba(139, 92, 246, 0.08)',
+                },
+                '&.Mui-focused': {
+                  borderColor: '#6366f1',
+                  backgroundColor: 'rgba(99, 102, 241, 0.08)',
+                  boxShadow: '0 0 0 3px rgba(99, 102, 241, 0.2)',
+                },
+                '& fieldset': {
+                  border: 'none',
+                },
+                '& .MuiSelect-icon': {
+                  color: '#6366f1',
+                },
+              }}
             >
-              <MenuItem value="">
+              <MenuItem value="" sx={{ fontFamily: '"Nacelle", sans-serif' }}>
                 <em>All Fields</em>
               </MenuItem>
               {Object.entries(CAREER_FIELDS).map(([fieldKey, fieldInfo]) => (
-                <MenuItem key={fieldKey} value={fieldKey}>
+                <MenuItem 
+                  key={fieldKey} 
+                  value={fieldKey}
+                  sx={{ fontFamily: '"Nacelle", sans-serif' }}
+                >
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, width: '100%' }}>
-                    <Box sx={{ fontSize: '1.2rem', minWidth: 24 }}>
+                    <Box sx={{ fontSize: '1.2rem', minWidth: 24, color: '#6366f1' }}>
                       {fieldIcons[fieldKey as CareerFieldKey]}
                     </Box>
                     <Box sx={{ flex: 1 }}>
-                      <Typography variant="body2" sx={{ fontWeight: 500 }}>
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          fontWeight: 500,
+                          fontFamily: '"Nacelle", sans-serif',
+                        }}
+                      >
                         {fieldInfo.name}
                       </Typography>
-                      <Typography variant="caption" color="text.secondary">
+                      <Typography 
+                        variant="caption" 
+                        color="text.secondary"
+                        sx={{ fontSize: '0.75rem' }}
+                      >
                         {countsLoading 
                           ? 'Loading...'
                           : fieldCareerCounts[fieldKey as CareerFieldKey] !== undefined
@@ -476,21 +560,59 @@ const CareersPage: React.FC = () => {
                         height: '100%', 
                         display: 'flex', 
                         flexDirection: 'column',
-                        transition: 'transform 0.2s ease-in-out',
+                        background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1))',
+                        border: '2px solid #6366f1',
+                        borderRadius: 2,
+                        transition: 'all 0.3s ease',
                         '&:hover': {
-                          transform: 'translateY(-4px)',
+                          transform: 'translateY(-8px)',
+                          boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 10px 10px -5px rgb(0 0 0 / 0.04)',
                         },
                       }}
                     >
                       <CardContent sx={{ flexGrow: 1 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 2 }}>
-                          <Work color="primary" />
-                          <Typography variant="h6" component="h3" sx={{ flexGrow: 1 }}>
-                            {career.title}
-                          </Typography>
+                        <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2, mb: 2 }}>
+                          <Box sx={{
+                            width: 40,
+                            height: 40,
+                            borderRadius: '50%',
+                            backgroundColor: 'primary.main',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'white',
+                            flexShrink: 0
+                          }}>
+                            <Work />
+                          </Box>
+                          <Box sx={{ flexGrow: 1, minWidth: 0 }}>
+                            <Typography 
+                              variant="h6" 
+                              component="h3" 
+                              sx={{ 
+                                fontFamily: '"Nacelle", sans-serif',
+                                fontWeight: 600,
+                                fontSize: '1rem',
+                                color: 'text.primary',
+                                mb: 0.5,
+                                lineHeight: 1.2
+                              }}
+                            >
+                              {career.title}
+                            </Typography>
+                          </Box>
                         </Box>
                         
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                        <Typography 
+                          variant="body2" 
+                          color="text.secondary" 
+                          sx={{ 
+                            mb: 2,
+                            fontSize: '0.875rem',
+                            lineHeight: 1.4,
+                            opacity: 0.9
+                          }}
+                        >
                           {career.description.length > 150 
                             ? `${career.description.substring(0, 150)}...` 
                             : career.description
@@ -501,36 +623,97 @@ const CareersPage: React.FC = () => {
                           <Chip 
                             label={career.difficulty} 
                             color={getDifficultyColor(career.difficulty) as any}
-                            size="small" 
+                            size="small"
+                            sx={{
+                              fontWeight: 600,
+                              fontSize: '0.75rem',
+                            }}
                           />
                           <Chip 
                             label={`${career.estimatedTimeToMaster} months`} 
                             icon={<TrendingUp />}
                             size="small" 
                             variant="outlined"
+                            sx={{
+                              fontWeight: 500,
+                              fontSize: '0.75rem',
+                              borderColor: 'primary.main',
+                              color: 'primary.main',
+                            }}
                           />
                         </Box>
 
                         {career.averageSalary && (
-                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                            <AttachMoney color="success" fontSize="small" />
-                            <Typography variant="body2" color="success.main">
+                          <Box sx={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: 1, 
+                            mb: 2,
+                            p: 1,
+                            backgroundColor: 'rgba(5, 150, 105, 0.1)',
+                            borderRadius: 1,
+                            border: '1px solid rgba(5, 150, 105, 0.3)',
+                          }}>
+                            <AttachMoney sx={{ color: 'success.main', fontSize: '1rem' }} />
+                            <Typography 
+                              variant="body2" 
+                              sx={{ 
+                                color: 'success.main',
+                                fontWeight: 600,
+                                fontSize: '0.875rem'
+                              }}
+                            >
                               {formatSalary(career.averageSalary)}
                             </Typography>
                           </Box>
                         )}
 
-                        <Typography variant="caption" color="text.secondary">
-                          Skills: {career.skills.slice(0, 3).map(s => s.skillName).join(', ')}
-                          {career.skills.length > 3 && ` +${career.skills.length - 3} more`}
-                        </Typography>
+                        <Box sx={{
+                          p: 1,
+                          backgroundColor: 'rgba(99, 102, 241, 0.05)',
+                          borderRadius: 1,
+                          border: '1px solid rgba(99, 102, 241, 0.2)',
+                          mt: 'auto'
+                        }}>
+                          <Typography 
+                            variant="caption" 
+                            sx={{ 
+                              color: 'text.secondary',
+                              fontWeight: 500,
+                              fontSize: '0.75rem',
+                              lineHeight: 1.3
+                            }}
+                          >
+                            <strong style={{ color: '#6366f1' }}>Skills:</strong> {career.skills.slice(0, 3).map(s => s.skillName).join(', ')}
+                            {career.skills.length > 3 && ` +${career.skills.length - 3} more`}
+                          </Typography>
+                        </Box>
                       </CardContent>
 
-                      <CardActions>
+                      <CardActions sx={{ 
+                        p: 2, 
+                        pt: 0,
+                        justifyContent: 'center' 
+                      }}>
                         <Button 
+                          variant="contained"
                           size="small" 
                           endIcon={<ArrowForward />}
                           onClick={() => navigate(`/careers/${career.id}`)}
+                          sx={{
+                            background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+                            color: 'white',
+                            fontWeight: 600,
+                            px: 3,
+                            py: 1,
+                            borderRadius: 2,
+                            textTransform: 'none',
+                            fontSize: '0.875rem',
+                            '&:hover': {
+                              background: 'linear-gradient(135deg, #4f46e5, #7c3aed)',
+                              transform: 'translateY(-1px)',
+                            }
+                          }}
                         >
                           Learn More
                         </Button>

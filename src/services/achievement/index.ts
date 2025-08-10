@@ -2,3 +2,4 @@
 
 export { achievementService } from './achievement.service';
 export type { UserStats } from './achievement.service';
+export type { Achievement } from '../types/achievement.types';

@@ -40,7 +40,7 @@ import {
   Upload as UploadIcon,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
-import { Career, careerService, careerFieldsService, careerCSVService, userService } from '../services';
+import { Career, careerService, careerFieldsService, careerCSVService, userService, certificationService } from '../services';
 import AdminCareerForm from '../components/AdminCareerForm';
 
 const AdminPage: React.FC = () => {
@@ -61,6 +61,8 @@ const AdminPage: React.FC = () => {
   const [csvExporting, setCsvExporting] = useState(false);
   const [csvImporting, setCsvImporting] = useState(false);
   const [csvStatus, setCsvStatus] = useState<string>('');
+  const [certSeeding, setCertSeeding] = useState(false);
+  const [certSeedStatus, setCertSeedStatus] = useState<string>('');
 
   useEffect(() => {
     if (isAdmin()) {
@@ -232,6 +234,24 @@ const AdminPage: React.FC = () => {
     }
   };
 
+  const handleSeedCertifications = async () => {
+    try {
+      setCertSeeding(true);
+      setCertSeedStatus('Seeding certification database...');
+      
+      await certificationService.seedCertifications();
+      
+      setCertSeedStatus('Successfully seeded certification database with industry-standard certifications!');
+      setTimeout(() => setCertSeedStatus(''), 5000);
+    } catch (error) {
+      console.error('Certification seeding error:', error);
+      setCertSeedStatus('Failed to seed certifications. Please try again.');
+      setTimeout(() => setCertSeedStatus(''), 5000);
+    } finally {
+      setCertSeeding(false);
+    }
+  };
+
   const handleEditCareer = (career: Career) => {
     setEditingCareer(career);
     setCareerFormOpen(true);
@@ -347,9 +367,18 @@ const AdminPage: React.FC = () => {
 
       {/* Admin Tabs */}
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs value={activeTab} onChange={(e, newValue) => setActiveTab(newValue)}>
+        <Tabs 
+          value={activeTab} 
+          onChange={(e, newValue) => setActiveTab(newValue)}
+          variant="scrollable"
+          scrollButtons="auto"
+        >
           <Tab label="Career Management" value="careers" />
           <Tab label="User Management" value="users" />
+          <Tab label="Quest Management" value="quests" />
+          <Tab label="Skill Management" value="skills" />
+          <Tab label="Achievement Management" value="achievements" />
+          <Tab label="Data Management" value="data" />
         </Tabs>
       </Box>
 
@@ -618,6 +647,134 @@ const AdminPage: React.FC = () => {
                 </Typography>
               </Box>
             )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Data Management Tab */}
+      {activeTab === 'data' && (
+        <Card>
+          <CardContent>
+            <Typography variant="h5" component="h2" sx={{ mb: 3 }}>
+              Database Management
+            </Typography>
+
+            <Alert severity="info" sx={{ mb: 3 }}>
+              <Typography variant="body2" sx={{ mb: 1 }}>
+                <strong>Data Seeding Operations:</strong> Initialize database collections with default data.
+              </Typography>
+              <Typography variant="body2">
+                Use these operations to populate your database with essential data for the application.
+              </Typography>
+            </Alert>
+
+            <Grid container spacing={3}>
+              {/* Certification Seeding */}
+              <Grid item xs={12} sm={6} md={4}>
+                <Card sx={{ height: '100%' }}>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      Professional Certifications
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      Seed the database with industry-standard certifications from AWS, Google, Microsoft, and other major providers.
+                    </Typography>
+                    
+                    {certSeedStatus && (
+                      <Alert 
+                        severity={certSeedStatus.includes('Failed') ? 'error' : 'success'} 
+                        sx={{ mb: 2, fontSize: '0.875rem' }}
+                      >
+                        {certSeedStatus}
+                      </Alert>
+                    )}
+                    
+                    <Button
+                      variant="contained"
+                      onClick={handleSeedCertifications}
+                      disabled={certSeeding}
+                      fullWidth
+                      sx={{ mt: 'auto' }}
+                    >
+                      {certSeeding ? 'Seeding...' : 'Seed Certifications'}
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              {/* Future seed operations can be added here */}
+              <Grid item xs={12} sm={6} md={4}>
+                <Card sx={{ height: '100%' }}>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      Hard Skills (O*NET)
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      Populate the database with O*NET-based hard skills and career mappings. (Available in skill service)
+                    </Typography>
+                    <Button
+                      variant="outlined"
+                      disabled
+                      fullWidth
+                      sx={{ mt: 'auto' }}
+                    >
+                      Available in Skill Service
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Grid>
+
+              <Grid item xs={12} sm={6} md={4}>
+                <Card sx={{ height: '100%' }}>
+                  <CardContent>
+                    <Typography variant="h6" gutterBottom>
+                      Achievement System
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                      Initialize default achievements and badges for user gamification.
+                    </Typography>
+                    <Button
+                      variant="outlined"
+                      disabled
+                      fullWidth
+                      sx={{ mt: 'auto' }}
+                    >
+                      Coming Soon
+                    </Button>
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Quest Management Tab */}
+      {activeTab === 'quests' && (
+        <Card>
+          <CardContent>
+            <Typography variant="h5" gutterBottom>Quest Management</Typography>
+            <Alert severity="info">Quest management functionality is being implemented. All CRUD operations and CSV import/export will be available here.</Alert>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Skill Management Tab */}
+      {activeTab === 'skills' && (
+        <Card>
+          <CardContent>
+            <Typography variant="h5" gutterBottom>Skill Management</Typography>
+            <Alert severity="info">Skill management functionality is being implemented. Soft skills, hard skills, and certifications management will be available here.</Alert>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Achievement Management Tab */}
+      {activeTab === 'achievements' && (
+        <Card>
+          <CardContent>
+            <Typography variant="h5" gutterBottom>Achievement Management</Typography>
+            <Alert severity="info">Achievement management functionality is being implemented. Gamification badges and milestone management will be available here.</Alert>
           </CardContent>
         </Card>
       )}

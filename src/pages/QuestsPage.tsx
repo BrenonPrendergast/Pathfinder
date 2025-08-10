@@ -63,7 +63,13 @@ const QuestsPage: React.FC = () => {
 
   const handleCompleteQuest = async (quest: Quest) => {
     try {
-      await completeQuest(quest.id, quest.xpReward);
+      // Convert quest skill rewards to the format expected by completeQuest
+      const skillRewards = quest.skillRewards?.map(reward => ({
+        skillId: reward.skillId,
+        hoursAwarded: reward.hoursAwarded
+      })) || [];
+
+      await completeQuest(quest.id, quest.xpReward, skillRewards);
       // Refresh quests
       loadQuests();
     } catch (error) {
@@ -224,6 +230,31 @@ const QuestsPage: React.FC = () => {
                       ~{quest.estimatedHours} hours
                     </Typography>
                   </Box>
+
+                  {quest.skillRewards && quest.skillRewards.length > 0 && (
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 600, display: 'block', mb: 0.5 }}>
+                        Skills Developed:
+                      </Typography>
+                      <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+                        {quest.skillRewards.slice(0, 3).map((skillReward) => (
+                          <Chip 
+                            key={skillReward.skillId} 
+                            label={`${skillReward.skillName} (+${skillReward.hoursAwarded}h)`}
+                            size="small" 
+                            color="secondary"
+                            variant="outlined"
+                            sx={{ fontSize: '0.7rem' }}
+                          />
+                        ))}
+                        {quest.skillRewards.length > 3 && (
+                          <Typography variant="caption" color="text.secondary">
+                            +{quest.skillRewards.length - 3} more skills
+                          </Typography>
+                        )}
+                      </Box>
+                    </Box>
+                  )}
 
                   {quest.prerequisites.length > 0 && (
                     <Box sx={{ mb: 2 }}>

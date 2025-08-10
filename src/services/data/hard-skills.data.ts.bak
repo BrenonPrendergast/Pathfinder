@@ -1,0 +1,425 @@
+// Comprehensive hard skills data extracted from O*NET database
+import { HardSkill } from '../types/skill.types';
+
+export const ADDITIONAL_HARD_SKILLS: HardSkill[] = [
+  // Programming Languages (Extended)
+  {
+    id: 'typescript',
+    name: 'TypeScript',
+    category: 'Programming Languages',
+    description: 'Strongly typed programming language that builds on JavaScript by adding static type definitions.',
+    onetCodes: ['15-1252.00', '15-1254.01'],
+    skillLevel: 'intermediate',
+    marketDemand: 78,
+    averageSalaryImpact: 12000,
+    prerequisites: ['javascript', 'programming_fundamentals'],
+    relatedSkills: ['javascript', 'react', 'nodejs', 'angular'],
+    industries: ['Technology', 'Enterprise Software', 'Web Development'],
+    certifications: ['Microsoft TypeScript Certification'],
+    learningResources: [
+      {
+        type: 'documentation',
+        title: 'TypeScript Official Handbook',
+        url: 'https://www.typescriptlang.org/docs/',
+        estimatedHours: 30
+      }
+    ],
+    proficiencyLevels: {
+      1: 'Basic type annotations and interfaces',
+      2: 'Generic types and advanced type features',
+      3: 'Complex type manipulations and decorators',
+      4: 'Advanced patterns and performance optimization',
+      5: 'Type system architecture and tooling'
+    }
+  },
+  {
+    id: 'java',
+    name: 'Java',
+    category: 'Programming Languages',
+    description: 'Object-oriented programming language widely used for enterprise applications, Android development, and web services.',
+    onetCodes: ['15-1252.00', '15-1254.00'],
+    skillLevel: 'intermediate',
+    marketDemand: 82,
+    averageSalaryImpact: 16000,
+    prerequisites: ['programming_fundamentals', 'object_oriented_programming'],
+    relatedSkills: ['spring_framework', 'android_development', 'microservices'],
+    industries: ['Enterprise', 'Finance', 'Healthcare', 'Government'],
+    certifications: ['Oracle Java Certification', 'Spring Professional'],
+    learningResources: [
+      {
+        type: 'course',
+        title: 'Java Programming Fundamentals',
+        url: 'https://docs.oracle.com/javase/tutorial/',
+        estimatedHours: 50
+      }
+    ],
+    proficiencyLevels: {
+      1: 'Basic syntax and object-oriented concepts',
+      2: 'Collections, exceptions, and file I/O',
+      3: 'Multithreading, networking, and frameworks',
+      4: 'Performance tuning and advanced patterns',
+      5: 'Architecture design and team leadership'
+    }
+  },
+  {
+    id: 'golang',
+    name: 'Go (Golang)',
+    category: 'Programming Languages', 
+    description: 'Statically typed, compiled programming language designed for simplicity, efficiency, and concurrent programming.',
+    onetCodes: ['15-1252.00', '15-1244.00'],
+    skillLevel: 'intermediate',
+    marketDemand: 65,
+    averageSalaryImpact: 18000,
+    prerequisites: ['programming_fundamentals', 'system_programming'],
+    relatedSkills: ['kubernetes', 'docker', 'microservices', 'cloud_computing'],
+    industries: ['Cloud Services', 'DevOps', 'Infrastructure', 'Blockchain'],
+    certifications: ['Go Programming Certification'],
+    learningResources: [
+      {
+        type: 'tutorial',
+        title: 'Go by Example',
+        url: 'https://gobyexample.com/',
+        estimatedHours: 40
+      }
+    ],
+    proficiencyLevels: {
+      1: 'Basic syntax and package system',
+      2: 'Goroutines, channels, and concurrency',
+      3: 'Advanced patterns and performance optimization',
+      4: 'System programming and networking',
+      5: 'Distributed systems and architecture'
+    }
+  },
+
+  // Data Science & Analytics (Extended)
+  {
+    id: 'r_programming',
+    name: 'R Programming',
+    category: 'Data Science',
+    description: 'Programming language and environment for statistical computing and graphics.',
+    onetCodes: ['15-2051.00', '15-2041.00'],
+    skillLevel: 'intermediate',
+    marketDemand: 60,
+    averageSalaryImpact: 14000,
+    prerequisites: ['statistics', 'mathematics', 'data_analysis'],
+    relatedSkills: ['data_visualization', 'statistical_analysis', 'machine_learning'],
+    industries: ['Research', 'Academia', 'Pharmaceuticals', 'Finance'],
+    certifications: ['R Programming Certification'],
+    learningResources: [
+      {
+        type: 'course',
+        title: 'R for Data Science',
+        url: 'https://r4ds.had.co.nz/',
+        estimatedHours: 60
+      }
+    ],
+    proficiencyLevels: {
+      1: 'Basic R syntax and data structures',
+      2: 'Data manipulation with dplyr and tidyr',
+      3: 'Statistical modeling and visualization',
+      4: 'Advanced statistics and package development',
+      5: 'Research methodology and publication'
+    }
+  },
+  {
+    id: 'tableau',
+    name: 'Tableau',
+    category: 'Data Visualization',
+    description: 'Business intelligence and data visualization tool for creating interactive dashboards and reports.',
+    onetCodes: ['15-2051.00', '13-1161.00'],
+    skillLevel: 'beginner',
+    marketDemand: 70,
+    averageSalaryImpact: 10000,
+    prerequisites: ['data_analysis', 'sql'],
+    relatedSkills: ['data_visualization', 'business_intelligence', 'excel'],
+    industries: ['Business Analytics', 'Marketing', 'Finance', 'Healthcare'],
+    certifications: ['Tableau Desktop Specialist', 'Tableau Certified Associate'],
+    learningResources: [
+      {
+        type: 'course',
+        title: 'Tableau Desktop Training',
+        url: 'https://www.tableau.com/learn/training',
+        estimatedHours: 25
+      }
+    ],
+    proficiencyLevels: {
+      1: 'Basic chart creation and data connections',
+      2: 'Calculated fields and basic dashboards',
+      3: 'Advanced calculations and interactive dashboards',
+      4: 'Performance optimization and advanced analytics',
+      5: 'Enterprise deployment and governance'
+    }
+  },
+  {
+    id: 'powerbi',
+    name: 'Power BI',
+    category: 'Data Visualization',
+    description: 'Microsoft business analytics tool for creating reports and dashboards with self-service business intelligence.',
+    onetCodes: ['15-2051.01', '13-1161.00'],
+    skillLevel: 'beginner',
+    marketDemand: 75,
+    averageSalaryImpact: 9000,
+    prerequisites: ['excel', 'data_analysis', 'sql'],
+    relatedSkills: ['business_intelligence', 'data_modeling', 'dax'],
+    industries: ['Enterprise', 'Government', 'Healthcare', 'Manufacturing'],
+    certifications: ['Microsoft Power BI Certification'],
+    learningResources: [
+      {
+        type: 'course',
+        title: 'Power BI Fundamentals',
+        url: 'https://docs.microsoft.com/en-us/power-bi/learning-catalog/',
+        estimatedHours: 30
+      }
+    ],
+    proficiencyLevels: {
+      1: 'Basic report creation and data import',
+      2: 'DAX functions and data modeling',
+      3: 'Advanced visualizations and dashboards',
+      4: 'Power BI Service and sharing strategies',
+      5: 'Enterprise architecture and governance'
+    }
+  },
+
+  // Cloud Computing (Extended)
+  {
+    id: 'azure',
+    name: 'Microsoft Azure',
+    category: 'Cloud Computing',
+    description: 'Microsoft cloud computing platform offering infrastructure, platform, and software services.',
+    onetCodes: ['15-1244.00', '15-1252.00'],
+    skillLevel: 'intermediate',
+    marketDemand: 82,
+    averageSalaryImpact: 18000,
+    prerequisites: ['cloud_fundamentals', 'networking', 'windows_server'],
+    relatedSkills: ['powershell', 'active_directory', 'devops'],
+    industries: ['Enterprise', 'Government', 'Healthcare', 'Education'],
+    certifications: ['Azure Fundamentals', 'Azure Solutions Architect', 'Azure Developer'],
+    learningResources: [
+      {
+        type: 'certification',
+        title: 'Azure Fundamentals',
+        url: 'https://docs.microsoft.com/en-us/learn/paths/azure-fundamentals/',
+        estimatedHours: 40
+      }
+    ],
+    proficiencyLevels: {
+      1: 'Basic Azure services and portal navigation',
+      2: 'Virtual machines, storage, and networking',
+      3: 'App services, databases, and monitoring',
+      4: 'Advanced services and infrastructure as code',
+      5: 'Multi-cloud architecture and cost optimization'
+    }
+  },
+  {
+    id: 'kubernetes',
+    name: 'Kubernetes',
+    category: 'DevOps',
+    description: 'Open-source container orchestration system for automating deployment, scaling, and management of containerized applications.',
+    onetCodes: ['15-1244.00', '15-1252.00'],
+    skillLevel: 'advanced',
+    marketDemand: 72,
+    averageSalaryImpact: 22000,
+    prerequisites: ['docker', 'linux', 'networking', 'yaml'],
+    relatedSkills: ['devops', 'microservices', 'helm', 'istio'],
+    industries: ['Cloud Services', 'DevOps', 'Enterprise Technology'],
+    certifications: ['Certified Kubernetes Administrator (CKA)', 'Certified Kubernetes Application Developer (CKAD)'],
+    learningResources: [
+      {
+        type: 'course',
+        title: 'Kubernetes Fundamentals',
+        url: 'https://kubernetes.io/docs/tutorials/',
+        estimatedHours: 50
+      }
+    ],
+    proficiencyLevels: {
+      1: 'Basic concepts and kubectl commands',
+      2: 'Deployments, services, and configuration',
+      3: 'Persistent volumes, secrets, and networking',
+      4: 'Advanced scheduling and cluster management',
+      5: 'Multi-cluster management and platform engineering'
+    }
+  },
+
+  // Security & Infrastructure
+  {
+    id: 'cybersecurity_fundamentals',
+    name: 'Cybersecurity Fundamentals',
+    category: 'Cybersecurity',
+    description: 'Core principles and practices for protecting digital assets, networks, and systems from cyber threats.',
+    onetCodes: ['15-1212.00', '15-1244.00'],
+    skillLevel: 'intermediate',
+    marketDemand: 88,
+    averageSalaryImpact: 20000,
+    prerequisites: ['networking', 'operating_systems'],
+    relatedSkills: ['penetration_testing', 'incident_response', 'risk_assessment'],
+    industries: ['Technology', 'Finance', 'Government', 'Healthcare'],
+    certifications: ['CompTIA Security+', 'CISSP', 'CEH'],
+    learningResources: [
+      {
+        type: 'certification',
+        title: 'CompTIA Security+ Training',
+        url: 'https://www.comptia.org/certifications/security',
+        estimatedHours: 80
+      }
+    ],
+    proficiencyLevels: {
+      1: 'Basic security concepts and terminology',
+      2: 'Network security and access controls',
+      3: 'Threat analysis and vulnerability assessment',
+      4: 'Incident response and forensics',
+      5: 'Security architecture and compliance'
+    }
+  },
+  {
+    id: 'terraform',
+    name: 'Terraform',
+    category: 'Infrastructure as Code',
+    description: 'Open-source tool for building, changing, and versioning infrastructure safely and efficiently using declarative configuration.',
+    onetCodes: ['15-1244.00', '15-1252.00'],
+    skillLevel: 'intermediate',
+    marketDemand: 68,
+    averageSalaryImpact: 15000,
+    prerequisites: ['cloud_computing', 'yaml', 'json', 'devops'],
+    relatedSkills: ['aws', 'azure', 'ansible', 'jenkins'],
+    industries: ['Cloud Services', 'DevOps', 'Infrastructure Management'],
+    certifications: ['HashiCorp Certified: Terraform Associate'],
+    learningResources: [
+      {
+        type: 'tutorial',
+        title: 'Terraform Getting Started',
+        url: 'https://learn.hashicorp.com/terraform',
+        estimatedHours: 35
+      }
+    ],
+    proficiencyLevels: {
+      1: 'Basic HCL syntax and resource creation',
+      2: 'Modules, variables, and state management',
+      3: 'Advanced features and best practices',
+      4: 'Multi-environment and team workflows',
+      5: 'Enterprise patterns and governance'
+    }
+  },
+
+  // Mobile Development
+  {
+    id: 'react_native',
+    name: 'React Native',
+    category: 'Mobile Development',
+    description: 'Framework for building native mobile applications using React and JavaScript.',
+    onetCodes: ['15-1254.00', '15-1252.00'],
+    skillLevel: 'intermediate',
+    marketDemand: 65,
+    averageSalaryImpact: 14000,
+    prerequisites: ['react', 'javascript', 'mobile_development_fundamentals'],
+    relatedSkills: ['ios_development', 'android_development', 'expo'],
+    industries: ['Mobile Apps', 'Startups', 'E-commerce', 'Social Media'],
+    certifications: ['React Native Certification'],
+    learningResources: [
+      {
+        type: 'tutorial',
+        title: 'React Native Documentation',
+        url: 'https://reactnative.dev/docs/getting-started',
+        estimatedHours: 40
+      }
+    ],
+    proficiencyLevels: {
+      1: 'Basic components and navigation',
+      2: 'State management and API integration',
+      3: 'Native modules and platform-specific code',
+      4: 'Performance optimization and publishing',
+      5: 'Complex app architecture and mentoring'
+    }
+  },
+  {
+    id: 'flutter',
+    name: 'Flutter',
+    category: 'Mobile Development',
+    description: 'Google UI toolkit for building natively compiled applications for mobile, web, and desktop from a single codebase.',
+    onetCodes: ['15-1254.00', '15-1252.00'],
+    skillLevel: 'intermediate',
+    marketDemand: 58,
+    averageSalaryImpact: 13000,
+    prerequisites: ['dart_programming', 'mobile_development_fundamentals'],
+    relatedSkills: ['dart_programming', 'mobile_ui_design', 'firebase'],
+    industries: ['Mobile Apps', 'Startups', 'Cross-platform Development'],
+    certifications: ['Google Flutter Certification'],
+    learningResources: [
+      {
+        type: 'course',
+        title: 'Flutter Development Bootcamp',
+        url: 'https://flutter.dev/docs/get-started/learn-flutter',
+        estimatedHours: 45
+      }
+    ],
+    proficiencyLevels: {
+      1: 'Basic widgets and layouts',
+      2: 'State management and navigation',
+      3: 'Advanced UI and animations',
+      4: 'Platform integration and publishing',
+      5: 'Complex architectures and performance'
+    }
+  },
+
+  // AI/ML Extended
+  {
+    id: 'tensorflow',
+    name: 'TensorFlow',
+    category: 'Machine Learning',
+    description: 'Open-source platform for machine learning and deep learning model development and deployment.',
+    onetCodes: ['15-2051.00', '15-2041.01'],
+    skillLevel: 'advanced',
+    marketDemand: 70,
+    averageSalaryImpact: 23000,
+    prerequisites: ['python', 'machine_learning', 'linear_algebra', 'calculus'],
+    relatedSkills: ['keras', 'pytorch', 'deep_learning', 'neural_networks'],
+    industries: ['AI/ML', 'Research', 'Technology', 'Automotive'],
+    certifications: ['TensorFlow Developer Certificate'],
+    learningResources: [
+      {
+        type: 'course',
+        title: 'TensorFlow Developer Certificate Program',
+        url: 'https://www.tensorflow.org/certificate',
+        estimatedHours: 100
+      }
+    ],
+    proficiencyLevels: {
+      1: 'Basic model creation and training',
+      2: 'Custom layers and loss functions',
+      3: 'Advanced architectures and optimization',
+      4: 'Production deployment and serving',
+      5: 'Research and novel architecture design'
+    }
+  },
+  {
+    id: 'pytorch',
+    name: 'PyTorch',
+    category: 'Machine Learning',
+    description: 'Open-source machine learning framework that accelerates the path from research prototyping to production deployment.',
+    onetCodes: ['15-2051.00', '15-2041.01'],
+    skillLevel: 'advanced',
+    marketDemand: 68,
+    averageSalaryImpact: 22000,
+    prerequisites: ['python', 'machine_learning', 'deep_learning', 'numpy'],
+    relatedSkills: ['tensorflow', 'deep_learning', 'computer_vision', 'nlp'],
+    industries: ['AI/ML', 'Research', 'Technology', 'Healthcare'],
+    certifications: ['PyTorch Professional Certification'],
+    learningResources: [
+      {
+        type: 'tutorial',
+        title: 'PyTorch Tutorials',
+        url: 'https://pytorch.org/tutorials/',
+        estimatedHours: 80
+      }
+    ],
+    proficiencyLevels: {
+      1: 'Tensor operations and basic models',
+      2: 'Neural network architectures and training',
+      3: 'Advanced techniques and custom modules',
+      4: 'Research implementation and optimization',
+      5: 'Novel architecture development and mentoring'
+    }
+  }
+];
+
+// Combine with existing skills for comprehensive catalog
+export const ALL_HARD_SKILLS_DATA = [...ADDITIONAL_HARD_SKILLS];
