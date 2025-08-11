@@ -194,7 +194,7 @@ const QuestsPage: React.FC = () => {
               >
                 <CardContent sx={{ flexGrow: 1 }}>
                   <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 2 }}>
-                    {getTypeIcon(quest.type)}
+                    {getTypeIcon(quest.type || 'general')}
                     <Typography variant="h6" component="h3" sx={{ flexGrow: 1 }}>
                       {quest.title}
                       {completed && ' ✅'}
@@ -256,16 +256,16 @@ const QuestsPage: React.FC = () => {
                     </Box>
                   )}
 
-                  {quest.prerequisites.length > 0 && (
+                  {quest.prerequisites && quest.prerequisites.length > 0 && (
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="caption" color="text.secondary">
-                        Prerequisites: {quest.prerequisites.join(', ')}
+                        Prerequisites: {quest.prerequisites?.join(', ')}
                       </Typography>
                     </Box>
                   )}
 
                   <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
-                    {quest.tags.slice(0, 3).map((tag) => (
+                    {quest.tags?.slice(0, 3).map((tag) => (
                       <Chip 
                         key={tag} 
                         label={tag} 
@@ -274,9 +274,9 @@ const QuestsPage: React.FC = () => {
                         sx={{ fontSize: '0.7rem' }}
                       />
                     ))}
-                    {quest.tags.length > 3 && (
+                    {(quest.tags?.length || 0) > 3 && (
                       <Typography variant="caption" color="text.secondary">
-                        +{quest.tags.length - 3} more
+                        +{(quest.tags?.length || 0) - 3} more
                       </Typography>
                     )}
                   </Box>

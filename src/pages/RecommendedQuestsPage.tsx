@@ -332,7 +332,7 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
 
         <CardContent sx={{ flexGrow: 1 }}>
           <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 2, mt: 2 }}>
-            {getTypeIcon(quest.type)}
+            {getTypeIcon(quest.type || 'general')}
             <Typography variant="h6" component="h3" sx={{ flexGrow: 1 }}>
               {quest.title}
               {isCompleted && ' ✅'}

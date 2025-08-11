@@ -103,10 +103,10 @@ class QuestRecommendationService {
       .filter(path => path.isActive)
       .map(path => path.careerId);
 
-    const relevantCareers = quest.relatedCareers.filter(careerId => 
+    const relevantCareers = quest.relatedCareers?.filter(careerId => 
       activeCareerIds.includes(careerId) || 
       userProfile.careerPaths.some(path => path.careerId === careerId)
-    );
+    ) || [];
 
     if (relevantCareers.length > 0) {
       const careerMatch = relevantCareers.length * 10; // 10 points per matching career
@@ -120,7 +120,7 @@ class QuestRecommendationService {
     }
 
     // Bonus for active career path
-    if (activeCareerIds.some(id => quest.relatedCareers.includes(id))) {
+    if (activeCareerIds.some(id => quest.relatedCareers?.includes(id))) {
       score += 10;
       reasons.push({
         type: 'career_progress',
@@ -232,7 +232,7 @@ class QuestRecommendationService {
     let score = 0;
     const reasons: RecommendationReason[] = [];
 
-    if (quest.prerequisites.length === 0) {
+    if (!quest.prerequisites || quest.prerequisites.length === 0) {
       score += 5; // Bonus for no prerequisites
       reasons.push({
         type: 'prerequisite_ready',
@@ -243,7 +243,7 @@ class QuestRecommendationService {
       // Check if user has completed prerequisite quests or has relevant skills
       let metPrerequisites = 0;
       
-      for (const prereq of quest.prerequisites) {
+      for (const prereq of quest.prerequisites || []) {
         // Check if user has completed a quest with this prerequisite
         const hasSkill = userProfile.skillProficiencies[prereq] >= 2; // At least beginner level
         const completedRelatedQuest = userProfile.completedQuests.length > 0; // Simplified check
@@ -253,7 +253,7 @@ class QuestRecommendationService {
         }
       }
 
-      const prerequisiteRatio = metPrerequisites / quest.prerequisites.length;
+      const prerequisiteRatio = metPrerequisites / (quest.prerequisites?.length || 1);
       score += prerequisiteRatio * 10;
 
       if (prerequisiteRatio >= 0.8) {

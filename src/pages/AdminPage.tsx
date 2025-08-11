@@ -38,10 +38,21 @@ import {
   People,
   Download as DownloadIcon,
   Upload as UploadIcon,
+  Psychology,
+  School,
+  Assignment,
+  EmojiEvents,
+  TrendingUp,
+  Analytics,
+  Groups,
+  Schedule,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
-import { Career, careerService, careerFieldsService, careerCSVService, userService, certificationService } from '../services';
+import { Career, careerService, careerFieldsService, careerCSVService, userService, certificationService, questService, skillService, hardSkillsService, achievementService } from '../services';
 import AdminCareerForm from '../components/AdminCareerForm';
+import SkillManagement from '../components/admin/SkillManagement';
+import QuestManagement from '../components/admin/QuestManagement';
+import AchievementManagement from '../components/admin/AchievementManagement';
 
 const AdminPage: React.FC = () => {
   const { isAdmin, userProfile } = useAuth();
@@ -64,10 +75,27 @@ const AdminPage: React.FC = () => {
   const [certSeeding, setCertSeeding] = useState(false);
   const [certSeedStatus, setCertSeedStatus] = useState<string>('');
 
+  // Analytics state
+  const [analytics, setAnalytics] = useState({
+    totalCareers: 0,
+    totalUsers: 0,
+    totalQuests: 0,
+    totalSoftSkills: 0,
+    totalHardSkills: 0,
+    totalCertifications: 0,
+    totalAchievements: 0,
+    activeUsers: 0,
+    completedQuests: 0,
+    avgUserLevel: 0,
+    totalXPAwarded: 0,
+    mostPopularCareerField: 'Loading...',
+  });
+
   useEffect(() => {
     if (isAdmin()) {
       loadCareers();
       loadUsers();
+      loadAnalytics();
     }
   }, [isAdmin]);
 
@@ -89,6 +117,80 @@ const AdminPage: React.FC = () => {
       setUsers(allUsers);
     } catch (error) {
       console.error('Error loading users:', error);
+    }
+  };
+
+  const loadAnalytics = async () => {
+    try {
+      // Load comprehensive analytics
+      const [
+        allCareersResult,
+        allUsers,
+        allQuests,
+        softSkills,
+        hardSkills,
+        certifications,
+        achievements
+      ] = await Promise.all([
+        careerService.getCareers(1000), // Get all careers for accurate count
+        userService.getAllUsers(),
+        questService.getQuests(),
+        skillService.getAllSoftSkills(),
+        hardSkillsService.getAllHardSkills(),
+        certificationService.getAllCertifications(),
+        achievementService.getAchievements()
+      ]);
+
+      // Calculate user analytics (safe with optional properties)
+      const activeUsers = allUsers.filter(user => {
+        // Check if user has recent activity - using createdAt as a fallback since lastLoginAt might not exist
+        const lastActivity = (user as any).lastLoginAt || (user as any).updatedAt || (user as any).createdAt;
+        if (!lastActivity) return false;
+        
+        try {
+          const activityDate = lastActivity.toDate ? lastActivity.toDate() : new Date(lastActivity);
+          return activityDate.getTime() > Date.now() - (30 * 24 * 60 * 60 * 1000); // Active in last 30 days
+        } catch {
+          return false;
+        }
+      }).length;
+
+      const totalCompletedQuests = allUsers.reduce((sum, user) => sum + (user.completedQuests?.length || 0), 0);
+      const avgLevel = allUsers.length > 0 ? allUsers.reduce((sum, user) => sum + (user.level || 1), 0) / allUsers.length : 0;
+      const totalXP = allUsers.reduce((sum, user) => sum + (user.totalXP || 0), 0);
+
+      // Find most popular career field (safe property access)
+      const careerFields: Record<string, number> = {};
+      allCareersResult.careers.forEach(career => {
+        const fields = (career as any).careerFields || (career as any).fields || [];
+        if (Array.isArray(fields)) {
+          fields.forEach((field: string) => {
+            careerFields[field] = (careerFields[field] || 0) + 1;
+          });
+        }
+      });
+      const mostPopular = Object.keys(careerFields).length > 0 
+        ? Object.entries(careerFields).reduce((a, b) => 
+            careerFields[a[0]] > careerFields[b[0]] ? a : b, ['Technology', 0]
+          )
+        : ['Technology', 0];
+
+      setAnalytics({
+        totalCareers: allCareersResult.careers.length, // Use array length instead of non-existent total property
+        totalUsers: allUsers.length,
+        totalQuests: allQuests.length,
+        totalSoftSkills: softSkills.length,
+        totalHardSkills: hardSkills.length,
+        totalCertifications: certifications.length,
+        totalAchievements: achievements.length,
+        activeUsers,
+        completedQuests: totalCompletedQuests,
+        avgUserLevel: Math.round(avgLevel * 10) / 10,
+        totalXPAwarded: totalXP,
+        mostPopularCareerField: String(mostPopular[0]),
+      });
+    } catch (error) {
+      console.error('Error loading analytics:', error);
     }
   };
 
@@ -316,13 +418,13 @@ const AdminPage: React.FC = () => {
 
       {/* Stats Cards */}
       <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Work color="primary" />
                 <Box>
-                  <Typography variant="h4">{careers.length}</Typography>
+                  <Typography variant="h4">{analytics.totalCareers}</Typography>
                   <Typography variant="body2" color="text.secondary">
                     Total Careers
                   </Typography>
@@ -332,13 +434,13 @@ const AdminPage: React.FC = () => {
           </Card>
         </Grid>
         
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <People color="primary" />
                 <Box>
-                  <Typography variant="h4">{users.length}</Typography>
+                  <Typography variant="h4">{analytics.totalUsers}</Typography>
                   <Typography variant="body2" color="text.secondary">
                     Total Users
                   </Typography>
@@ -348,13 +450,178 @@ const AdminPage: React.FC = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Assignment color="secondary" />
+                <Box>
+                  <Typography variant="h4">{analytics.totalQuests}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Total Quests
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <EmojiEvents color="warning" />
+                <Box>
+                  <Typography variant="h4">{analytics.totalAchievements}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Achievements
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Psychology color="info" />
+                <Box>
+                  <Typography variant="h4">{analytics.totalSoftSkills}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Soft Skills
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <TrendingUp color="success" />
+                <Box>
+                  <Typography variant="h4">{analytics.totalHardSkills}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Hard Skills
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <School color="error" />
+                <Box>
+                  <Typography variant="h4">{analytics.totalCertifications}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Certifications
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Groups color="primary" />
+                <Box>
+                  <Typography variant="h4">{analytics.activeUsers}</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Active Users
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Additional Analytics Cards */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Analytics sx={{ color: 'primary.contrastText' }} />
+                <Box>
+                  <Typography variant="h4">{analytics.avgUserLevel}</Typography>
+                  <Typography variant="body2" sx={{ color: 'primary.contrastText', opacity: 0.8 }}>
+                    Avg User Level
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ backgroundColor: 'secondary.main', color: 'secondary.contrastText' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Schedule sx={{ color: 'secondary.contrastText' }} />
+                <Box>
+                  <Typography variant="h4">{analytics.completedQuests}</Typography>
+                  <Typography variant="body2" sx={{ color: 'secondary.contrastText', opacity: 0.8 }}>
+                    Completed Quests
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ backgroundColor: 'success.main', color: 'success.contrastText' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <EmojiEvents sx={{ color: 'success.contrastText' }} />
+                <Box>
+                  <Typography variant="h4">{analytics.totalXPAwarded.toLocaleString()}</Typography>
+                  <Typography variant="body2" sx={{ color: 'success.contrastText', opacity: 0.8 }}>
+                    Total XP Awarded
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
+          <Card sx={{ backgroundColor: 'warning.main', color: 'warning.contrastText' }}>
+            <CardContent>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <TrendingUp sx={{ color: 'warning.contrastText' }} />
+                <Box>
+                  <Typography variant="h6" sx={{ fontSize: '1.5rem' }}>{analytics.mostPopularCareerField}</Typography>
+                  <Typography variant="body2" sx={{ color: 'warning.contrastText', opacity: 0.8 }}>
+                    Top Career Field
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={3}>
           <Card>
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <AdminPanelSettings color="primary" />
                 <Box>
-                  <Typography variant="h4">{userProfile?.role}</Typography>
+                  <Typography variant="h6" sx={{ textTransform: 'capitalize' }}>
+                    {userProfile?.role || 'admin'}
+                  </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Your Role
                   </Typography>
@@ -751,32 +1018,17 @@ const AdminPage: React.FC = () => {
 
       {/* Quest Management Tab */}
       {activeTab === 'quests' && (
-        <Card>
-          <CardContent>
-            <Typography variant="h5" gutterBottom>Quest Management</Typography>
-            <Alert severity="info">Quest management functionality is being implemented. All CRUD operations and CSV import/export will be available here.</Alert>
-          </CardContent>
-        </Card>
+        <QuestManagement />
       )}
 
       {/* Skill Management Tab */}
       {activeTab === 'skills' && (
-        <Card>
-          <CardContent>
-            <Typography variant="h5" gutterBottom>Skill Management</Typography>
-            <Alert severity="info">Skill management functionality is being implemented. Soft skills, hard skills, and certifications management will be available here.</Alert>
-          </CardContent>
-        </Card>
+        <SkillManagement />
       )}
 
       {/* Achievement Management Tab */}
       {activeTab === 'achievements' && (
-        <Card>
-          <CardContent>
-            <Typography variant="h5" gutterBottom>Achievement Management</Typography>
-            <Alert severity="info">Achievement management functionality is being implemented. Gamification badges and milestone management will be available here.</Alert>
-          </CardContent>
-        </Card>
+        <AchievementManagement />
       )}
 
       {/* Career Form Dialog */}

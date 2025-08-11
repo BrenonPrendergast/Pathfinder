@@ -21,7 +21,11 @@
       "Bash(node:*)",
       "Bash(mv:*)",
       "Bash(curl:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(pkill:*)",
+      "Bash(true)",
+      "Bash(taskkill:*)",
+      "Bash(PORT=3001 npm start)"
     ],
     "deny": []
   }

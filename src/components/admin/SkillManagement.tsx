@@ -94,15 +94,51 @@ const SkillManagement: React.FC<SkillManagementProps> = () => {
       setLoading(true);
       
       // Load soft skills
-      const softSkillsTree = await skillService.getSoftSkillsTree('admin-view');
-      setSoftSkills(softSkillsTree.map(node => node.skill));
+      const softSkillsData = await skillService.getAllSoftSkills();
+      setSoftSkills(softSkillsData);
       
       // Load hard skills (O*NET based)
-      const hardSkillsData = await hardSkillsService.getAllHardSkills();
+      let hardSkillsData = await hardSkillsService.getAllHardSkills();
+      
+      // Auto-seed hard skills if empty
+      if (hardSkillsData.length === 0) {
+        setSeedingStatus('Auto-seeding hard skills database...');
+        setSeeding(true);
+        try {
+          await hardSkillsService.seedHardSkills();
+          hardSkillsData = await hardSkillsService.getAllHardSkills();
+          setSeedingStatus('Successfully auto-seeded hard skills!');
+          setTimeout(() => setSeedingStatus(''), 3000);
+        } catch (seedError) {
+          console.error('Error seeding hard skills:', seedError);
+          setSeedingStatus('Failed to seed hard skills');
+          setTimeout(() => setSeedingStatus(''), 3000);
+        } finally {
+          setSeeding(false);
+        }
+      }
       setHardSkills(hardSkillsData);
       
       // Load certifications
-      const certificationsData = await certificationService.getAllCertifications();
+      let certificationsData = await certificationService.getAllCertifications();
+      
+      // Auto-seed certifications if empty
+      if (certificationsData.length === 0) {
+        setSeedingStatus('Auto-seeding certifications database...');
+        setSeeding(true);
+        try {
+          await certificationService.seedCertifications();
+          certificationsData = await certificationService.getAllCertifications();
+          setSeedingStatus('Successfully auto-seeded certifications!');
+          setTimeout(() => setSeedingStatus(''), 3000);
+        } catch (seedError) {
+          console.error('Error seeding certifications:', seedError);
+          setSeedingStatus('Failed to seed certifications');
+          setTimeout(() => setSeedingStatus(''), 3000);
+        } finally {
+          setSeeding(false);
+        }
+      }
       setCertifications(certificationsData);
     } catch (error) {
       console.error('Error loading skills data:', error);

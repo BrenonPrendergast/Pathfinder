@@ -358,6 +358,19 @@ class SkillService {
     return 'advanced';
   }
 
+  // Get all soft skills for admin (without user-specific data)
+  async getAllSoftSkills(): Promise<any[]> {
+    try {
+      return SOFT_SKILLS.map((skill, index) => ({
+        ...skill,
+        position: this.calculateSkillPosition(skill, index),
+      }));
+    } catch (error) {
+      console.error('Error getting all soft skills:', error);
+      throw error;
+    }
+  }
+
   // Admin CRUD methods (placeholder implementations for admin interface)
   async createSoftSkill(skillData: any): Promise<string> {
     console.log('createSoftSkill called:', skillData);

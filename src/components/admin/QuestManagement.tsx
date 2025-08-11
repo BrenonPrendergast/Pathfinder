@@ -424,7 +424,7 @@ const QuestManagement: React.FC<QuestManagementProps> = () => {
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2">
-                      {quest.category.replace(/_/g, ' ')}
+                      {quest.category?.replace(/_/g, ' ') || 'Uncategorized'}
                     </Typography>
                   </TableCell>
                   <TableCell>

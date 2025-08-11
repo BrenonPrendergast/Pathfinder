@@ -94,18 +94,20 @@ const AchievementsPage: React.FC = () => {
   const getProgressText = (achievement: Achievement) => {
     if (!userProfile) return '';
     
-    const { type, targetValue, skillId } = achievement.criteria;
+    const { type, value, target } = achievement.criteria;
     
     switch (type) {
-      case 'level_reached':
-        return `Level ${userProfile.level}/${targetValue}`;
-      case 'quest_count':
-        return `${userProfile.completedQuests.length}/${targetValue} quests`;
-      case 'skill_hours':
-        if (skillId && userProfile.skillHours[skillId]) {
-          return `${userProfile.skillHours[skillId]}/${targetValue} hours`;
+      case 'xp_milestone':
+        return `${userProfile.totalXP}/${value} XP`;
+      case 'quest_completion':
+        return `${userProfile.completedQuests.length}/${value} quests`;
+      case 'skill_mastery':
+        if (target && userProfile.skillHours[target]) {
+          return `${userProfile.skillHours[target]}/${value} hours`;
         }
-        return `0/${targetValue} hours`;
+        return `0/${value} hours`;
+      case 'career_path':
+        return `Career exploration: ${value} paths`;
       default:
         return '';
     }
@@ -114,18 +116,20 @@ const AchievementsPage: React.FC = () => {
   const getProgress = (achievement: Achievement) => {
     if (!userProfile) return 0;
     
-    const { type, targetValue, skillId } = achievement.criteria;
+    const { type, value, target } = achievement.criteria;
     
     switch (type) {
-      case 'level_reached':
-        return Math.min((userProfile.level / targetValue) * 100, 100);
-      case 'quest_count':
-        return Math.min((userProfile.completedQuests.length / targetValue) * 100, 100);
-      case 'skill_hours':
-        if (skillId && userProfile.skillHours[skillId]) {
-          return Math.min((userProfile.skillHours[skillId] / targetValue) * 100, 100);
+      case 'xp_milestone':
+        return Math.min((userProfile.totalXP / value) * 100, 100);
+      case 'quest_completion':
+        return Math.min((userProfile.completedQuests.length / value) * 100, 100);
+      case 'skill_mastery':
+        if (target && userProfile.skillHours[target]) {
+          return Math.min((userProfile.skillHours[target] / value) * 100, 100);
         }
         return 0;
+      case 'career_path':
+        return 50; // Placeholder
       default:
         return 0;
     }
@@ -134,7 +138,7 @@ const AchievementsPage: React.FC = () => {
   const unlockedAchievements = achievements.filter(a => isAchievementUnlocked(a.id));
   const lockedAchievements = achievements.filter(a => !isAchievementUnlocked(a.id));
 
-  const totalPoints = unlockedAchievements.reduce((sum, achievement) => sum + achievement.pointsReward, 0);
+  const totalPoints = unlockedAchievements.reduce((sum, achievement) => sum + achievement.xpReward, 0);
 
   if (loading) {
     return (
@@ -223,7 +227,7 @@ const AchievementsPage: React.FC = () => {
                       size="small" 
                     />
                     <Chip 
-                      label={`${achievement.pointsReward} pts`} 
+                      label={`${achievement.xpReward} pts`} 
                       color="success"
                       size="small" 
                     />
@@ -301,7 +305,7 @@ const AchievementsPage: React.FC = () => {
                         variant="outlined"
                       />
                       <Chip 
-                        label={`${achievement.pointsReward} pts`} 
+                        label={`${achievement.xpReward} pts`} 
                         size="small" 
                         variant="outlined"
                       />
@@ -395,7 +399,7 @@ const AchievementsPage: React.FC = () => {
                         variant={unlocked ? 'filled' : 'outlined'}
                       />
                       <Chip 
-                        label={`${achievement.pointsReward} pts`} 
+                        label={`${achievement.xpReward} pts`} 
                         color={unlocked ? 'success' : 'default'}
                         size="small" 
                         variant={unlocked ? 'filled' : 'outlined'}
