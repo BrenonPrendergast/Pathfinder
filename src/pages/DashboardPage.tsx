@@ -13,6 +13,8 @@ import {
   ListItemText,
   ListItemIcon,
   CircularProgress,
+  Switch,
+  FormControlLabel,
 } from '@mui/material';
 import {
   Assignment,
@@ -31,12 +33,14 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { questRecommendationService, QuestRecommendation } from '../services';
+import LootyDashboard from '../components/LootyDashboard';
 
 const DashboardPage: React.FC = () => {
   const { userProfile } = useAuth();
   const navigate = useNavigate();
   const [quickRecommendations, setQuickRecommendations] = useState<QuestRecommendation[]>([]);
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
+  const [lootyMode, setLootyMode] = useState(true); // Default to new design
 
   useEffect(() => {
     if (userProfile) {
@@ -96,11 +100,45 @@ const DashboardPage: React.FC = () => {
     ? userProfile.careerPaths.reduce((sum, path) => sum + path.progressPercentage, 0) / userProfile.careerPaths.length
     : 0;
 
+  // Looty mode toggle
+  if (lootyMode) {
+    return (
+      <>
+        <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+          <FormControlLabel
+            control={
+              <Switch
+                checked={lootyMode}
+                onChange={(e) => setLootyMode(e.target.checked)}
+                color="primary"
+              />
+            }
+            label="Looty Design"
+          />
+        </Box>
+        <LootyDashboard />
+      </>
+    );
+  }
+
   return (
     <Box>
-      <Typography variant="h3" component="h1" gutterBottom>
-        Welcome back, {userProfile.displayName || 'Pathfinder'}! 🎮
-      </Typography>
+      {/* Design Toggle */}
+      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Typography variant="h3" component="h1">
+          Welcome back, {userProfile.displayName || 'Pathfinder'}! 🎮
+        </Typography>
+        <FormControlLabel
+          control={
+            <Switch
+              checked={lootyMode}
+              onChange={(e) => setLootyMode(e.target.checked)}
+              color="primary"
+            />
+          }
+          label="Looty Design"
+        />
+      </Box>
       
       <Grid container spacing={3}>
         {/* Level Progress */}

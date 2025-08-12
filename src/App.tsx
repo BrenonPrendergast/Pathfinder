@@ -4,6 +4,7 @@ import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import AOS from 'aos';
 import 'aos/dist/aos.css';
+import './globals.css';
 import { AuthProvider } from './contexts/AuthContext';
 import Layout from './components/Layout/Layout';
 import HomePage from './pages/HomePage';
@@ -80,33 +81,33 @@ declare module '@mui/material/styles' {
 // Create Material-UI theme
 const theme = createTheme({
   palette: {
-    mode: 'light',
+    mode: 'dark',
     primary: {
-      main: '#6366f1', // Indigo-500
-      light: '#8b5cf6', // Purple-500  
-      dark: '#4f46e5', // Indigo-600
+      main: 'hsl(100, 82%, 45%)', // Looty neon-lime
+      light: 'hsl(100, 82%, 60%)', // Lighter lime
+      dark: 'hsl(100, 82%, 35%)', // Darker lime
     },
     secondary: {
-      main: '#7c3aed', // Purple-600
-      light: '#8b5cf6',
-      dark: '#6d28d9',
+      main: 'hsl(217, 20%, 18%)', // Slate/graphite from Looty
+      light: 'hsl(217, 20%, 25%)',
+      dark: 'hsl(217, 20%, 12%)',
     },
     success: {
-      main: '#059669', // Green-600
+      main: 'hsl(160, 60%, 38%)', // Teal-green accent from Looty
     },
     warning: {
-      main: '#d97706', // Orange-600
+      main: '#d97706', // Keep orange for warnings
     },
     error: {
-      main: '#dc2626', // Red-600
+      main: 'hsl(0, 72%, 45%)', // Red from Looty
     },
     background: {
-      default: '#0f0f23', // Dark background to match template
-      paper: '#1a1a2e',
+      default: 'hsl(224, 14%, 6%)', // Deep charcoal from Looty
+      paper: 'hsl(224, 14%, 8%)', // Slightly lighter charcoal for cards
     },
     text: {
-      primary: '#e5e7eb', // Gray-200
-      secondary: '#9ca3af', // Gray-400
+      primary: 'hsl(210, 20%, 96%)', // Near-white from Looty
+      secondary: 'hsl(215, 18%, 65%)', // Muted foreground from Looty
     },
     // Extended color palette
     indigo: {
@@ -216,14 +217,14 @@ const theme = createTheme({
     MuiCard: {
       styleOverrides: {
         root: {
-          backgroundColor: 'rgba(31, 41, 55, 0.8)', // Gray-800 with opacity
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(75, 85, 99, 0.3)', // Gray-600 with opacity  
+          backgroundColor: 'hsl(224, 14%, 8%)', // Looty card background
+          border: '1px solid hsl(220, 14%, 22%)', // Looty border color
+          borderRadius: '12px', // More rounded corners like Looty
           boxShadow: '0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1)',
-          transition: 'all 0.2s ease-in-out',
+          transition: 'all 200ms cubic-bezier(0.22, 1, 0.36, 1)', // Looty's smooth transition
           '&:hover': {
-            transform: 'translateY(-4px)',
-            boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)',
+            transform: 'translateY(-2px)',
+            boxShadow: '0 14px 38px -12px hsl(100 82% 45% / 0.35)', // Subtle primary glow on hover
           },
         },
       },

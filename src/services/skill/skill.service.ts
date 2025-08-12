@@ -143,7 +143,7 @@ class SkillService {
 
       if (currentProgress.exists()) {
         const progress = currentProgress.data() as UserSkillProgress;
-        const newHours = progress.hoursLogged + hours;
+        const newHours = Math.max(0, progress.hoursLogged + hours); // Prevent negative hours
         const newXP = progress.experiencePoints + (hours * 10); // 10 XP per hour
 
         // Simple leveling logic based on hours
@@ -170,10 +170,80 @@ class SkillService {
         }
 
         await updateDoc(skillProgressRef, updateData);
+      } else {
+        // Create new skill progress entry for point allocation
+        const userSkillProgress: UserSkillProgress = {
+          userId,
+          skillId,
+          currentLevel: Math.max(1, hours) as SkillProficiencyLevel,
+          hoursLogged: Math.max(0, hours),
+          lastUpdated: new Date(),
+          experiencePoints: hours * 10,
+          completedQuests: fromQuestId ? [fromQuestId] : [],
+          certifications: [],
+          verificationSource: 'self',
+        };
+        await setDoc(skillProgressRef, userSkillProgress);
       }
     } catch (error) {
       console.error('Error adding skill hours:', error);
       throw error;
+    }
+  }
+
+  // Gaming-style point allocation for interactive skill tree
+  async allocateSkillPoints(userId: string, skillId: string, points: number): Promise<void> {
+    try {
+      const skillProgressRef = doc(db, this.COLLECTIONS.USER_SKILLS, `${userId}_${skillId}`);
+      const currentProgress = await getDoc(skillProgressRef);
+
+      if (currentProgress.exists()) {
+        const progress = currentProgress.data() as UserSkillProgress;
+        const newLevel = Math.max(0, Math.min(5, progress.currentLevel + points)) as SkillProficiencyLevel;
+        
+        await updateDoc(skillProgressRef, {
+          currentLevel: newLevel,
+          lastUpdated: new Date(),
+          experiencePoints: progress.experiencePoints + (points * 100), // 100 XP per point
+          verificationSource: 'self' as const,
+        });
+      } else {
+        // Create new skill progress with allocated points
+        const userSkillProgress: UserSkillProgress = {
+          userId,
+          skillId,
+          currentLevel: Math.max(1, points) as SkillProficiencyLevel,
+          hoursLogged: points * 5, // 5 hours per point equivalent
+          lastUpdated: new Date(),
+          experiencePoints: points * 100,
+          completedQuests: [],
+          certifications: [],
+          verificationSource: 'self' as const,
+        };
+        await setDoc(skillProgressRef, userSkillProgress);
+      }
+    } catch (error) {
+      console.error('Error allocating skill points:', error);
+      throw error;
+    }
+  }
+
+  // Get user's available skill points based on career level and completed activities
+  async getUserAvailablePoints(userId: string): Promise<number> {
+    try {
+      // Get user profile to check level, completed quests, achievements
+      // For now, return a base amount + bonuses
+      const userProgress = await this.getUserSkillProgress(userId);
+      const totalSkillLevels = userProgress.reduce((sum, progress) => sum + progress.currentLevel, 0);
+      
+      // Base points + bonus for activity
+      const basePoints = 70;
+      const levelBonus = Math.floor(totalSkillLevels / 10) * 5; // 5 points per 10 skill levels
+      
+      return basePoints + levelBonus;
+    } catch (error) {
+      console.error('Error calculating available points:', error);
+      return 70; // Default
     }
   }
 

@@ -42,6 +42,25 @@ export interface BaseSkill {
   estimatedHoursToMaster: number;
   createdAt: Date;
   updatedAt: Date;
+  
+  // Gaming-style skill tree properties
+  treePosition?: {
+    x: number;
+    y: number;
+    tier: number; // 1-5, representing skill tier/level
+  };
+  maxPoints?: number; // Maximum points that can be allocated (usually 5)
+  pointsPerLevel?: number; // Points needed per proficiency level
+  iconName?: string; // Icon identifier for the skill
+  unlockRequirements?: {
+    minimumCareerLevel?: number;
+    requiredQuests?: string[];
+    requiredAchievements?: string[];
+  };
+  skillEffects?: {
+    description: string;
+    bonuses: string[];
+  };
 }
 
 // Soft skills are universal across all users
@@ -172,6 +191,63 @@ export interface SkillDevelopmentPlan {
   estimatedTimeline: number; // months
   createdAt: Date;
   lastUpdated: Date;
+}
+
+// Gaming-style skill tree node with allocated points
+export interface GameSkillTreeNode {
+  skill: BaseSkill;
+  userProgress: UserSkillProgress | null;
+  allocatedPoints: number; // Current points allocated by user
+  isUnlocked: boolean;
+  isAvailable: boolean; // Can be unlocked (prerequisites met)
+  connections: string[]; // Connected skill IDs for visual lines
+  nodeStyle: {
+    color: string;
+    glowEffect: boolean;
+    pulseAnimation: boolean;
+  };
+  effects: {
+    description: string;
+    currentBonuses: string[];
+    nextLevelPreview?: string;
+  };
+}
+
+// Skill tree section for gaming-style layout
+export interface GameSkillTreeSection {
+  id: string;
+  name: string;
+  description: string;
+  color: string;
+  tier: number; // 1-5, representing difficulty/progression tier
+  skills: GameSkillTreeNode[];
+  completionPercentage: number;
+  isUnlocked: boolean;
+  backgroundPattern?: string; // CSS pattern for section background
+}
+
+// Complete skill tree data structure
+export interface GameSkillTree {
+  id: string;
+  name: string;
+  type: 'soft' | 'technical' | 'career-specific';
+  careerId?: string;
+  description: string;
+  color: string;
+  totalPoints: number;
+  maxPoints: number;
+  availablePoints: number;
+  sections: GameSkillTreeSection[];
+  unlockedNodes: number;
+  totalNodes: number;
+  progressLevel: number; // Overall tree mastery level
+  specializations?: {
+    id: string;
+    name: string;
+    requiredPoints: number;
+    isUnlocked: boolean;
+    benefits: string[];
+  }[];
 }
 
 // Skill tree layout configuration

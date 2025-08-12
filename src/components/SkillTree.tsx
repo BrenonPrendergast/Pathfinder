@@ -25,8 +25,10 @@ import {
   FormControl,
   InputLabel,
   Alert,
+  Tooltip,
 } from '@mui/material';
 import CertificationGallery from './CertificationGallery';
+import InteractiveSkillTree from './InteractiveSkillTree';
 import {
   Code,
   Psychology,
@@ -56,11 +58,42 @@ import {
   BaseSkill
 } from '../services/types/skill.types';
 
-interface SkillTreeProps {
-  careerPath?: string;
+// Enhanced skill tree data structure
+interface EnhancedSkillTreeData {
+  name: string;
+  color: string;
+  totalPoints: number;
+  maxPoints: number;
+  sections: SkillSection[];
 }
 
-const SkillTree: React.FC<SkillTreeProps> = ({ careerPath = 'general' }) => {
+interface SkillSection {
+  id: string;
+  name: string;
+  color: string;
+  skills: EnhancedSkill[];
+}
+
+interface EnhancedSkill {
+  id: string;
+  name: string;
+  description: string;
+  currentPoints: number;
+  maxPoints: number;
+  isUnlocked: boolean;
+  prerequisites: string[];
+  position: { x: number; y: number };
+  category?: string;
+  marketDemand?: number;
+  estimatedHours?: number;
+}
+
+interface SkillTreeProps {
+  careerPath?: string;
+  interactive?: boolean; // Toggle between old and new UI
+}
+
+const SkillTree: React.FC<SkillTreeProps> = ({ careerPath = 'general', interactive = false }) => {
   const theme = useTheme();
   const { currentUser, userProfile } = useAuth();
 
@@ -98,6 +131,64 @@ const SkillTree: React.FC<SkillTreeProps> = ({ careerPath = 'general' }) => {
   const [assessmentDialog, setAssessmentDialog] = useState(false);
   const [selectedSkill, setSelectedSkill] = useState<SkillTreeNode | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Interactive skill tree state
+  const [activeTree, setActiveTree] = useState('soft');
+  const [skillTreeData, setSkillTreeData] = useState<{[key: string]: EnhancedSkillTreeData}>({});
+  const [availablePoints, setAvailablePoints] = useState(70);
+  const [hoveredSkill, setHoveredSkill] = useState<EnhancedSkill | null>(null);
+  const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
+  const svgRef = useRef<SVGSVGElement>(null);
+
+  // Transform existing data to enhanced format
+  const transformToEnhancedFormat = (skillNodes: SkillTreeNode[], treeName: string, treeColor: string) => {
+    const sections: { [key: string]: SkillSection } = {};
+    
+    skillNodes.forEach((node, index) => {
+      const sectionId = node.skill.category?.toLowerCase() || 'general';
+      const sectionName = node.skill.category?.replace('_', ' ') || 'General';
+      
+      if (!sections[sectionId]) {
+        sections[sectionId] = {
+          id: sectionId,
+          name: sectionName,
+          color: treeColor,
+          skills: []
+        };
+      }
+      
+      const enhancedSkill: EnhancedSkill = {
+        id: node.skill.id,
+        name: node.skill.name,
+        description: node.skill.description,
+        currentPoints: node.userProgress?.currentLevel || 0,
+        maxPoints: 5, // Convert to 0-5 scale
+        isUnlocked: node.isUnlocked,
+        prerequisites: node.skill.prerequisites,
+        position: node.position,
+        category: node.skill.category,
+        marketDemand: 70, // Default market demand
+        estimatedHours: node.skill.estimatedHoursToMaster || 40
+      };
+      
+      sections[sectionId].skills.push(enhancedSkill);
+    });
+    
+    const totalPoints = Object.values(sections).reduce((sum, section) => 
+      sum + section.skills.reduce((skillSum, skill) => skillSum + skill.currentPoints, 0), 0
+    );
+    const maxPoints = Object.values(sections).reduce((sum, section) => 
+      sum + section.skills.reduce((skillSum, skill) => skillSum + skill.maxPoints, 0), 0
+    );
+    
+    return {
+      name: treeName,
+      color: treeColor,
+      totalPoints,
+      maxPoints,
+      sections: Object.values(sections)
+    };
+  };
 
   // Load skill data on component mount
   useEffect(() => {
@@ -110,59 +201,26 @@ const SkillTree: React.FC<SkillTreeProps> = ({ careerPath = 'general' }) => {
         const softSkills = await skillService.getSoftSkillsTree(currentUser.uid);
         setSoftSkillsData(softSkills);
         
-        // Load O*NET-based hard skills for current career path
-        if (careerPath && careerPath !== 'general') {
+        // Load hard skills for legacy component (simplified for interactive mode)
+        if (careerPath && careerPath !== 'general' && !interactive) {
           try {
-            // Get O*NET skills for this career
-            const onetSkills = await hardSkillsService.getHardSkillsForCareer(careerPath);
-            console.log('O*NET skills loaded:', onetSkills.length);
-            
-            // Convert to SkillTreeNode format and integrate with user progress
-            const hardSkillNodes: SkillTreeNode[] = onetSkills.map((skill: any, index) => {
-              const userSkillLevel = userProfile?.skillProficiencies[skill.id] || 0;
-              const userHours = userProfile?.skillHours[skill.id] || 0;
-              
-              return {
-                skill: {
-                  id: skill.id,
-                  name: skill.name,
-                  description: skill.description,
-                  type: SkillType.HARD,
-                  category: mapONetCategoryToSkillCategory(skill.category),
-                  prerequisites: skill.prerequisites,
-                  relatedCareers: [careerPath],
-                  onetCode: skill.onetCodes?.[0] || undefined,
-                  estimatedHoursToMaster: skill.learningResources?.[0]?.estimatedHours || 40,
-                  createdAt: new Date(),
-                  updatedAt: new Date()
-                },
-                userProgress: userSkillLevel > 0 ? {
-                  userId: currentUser.uid,
-                  skillId: skill.id,
-                  currentLevel: userSkillLevel as SkillProficiencyLevel,
-                  hoursLogged: userHours,
-                  lastUpdated: new Date(),
-                  experiencePoints: userHours * 10, // 10 XP per hour
-                  completedQuests: [], // To be populated from user profile
-                  certifications: [],
-                  selfAssessmentDate: new Date(),
-                  verificationSource: 'self' as const
-                } : null,
-                isUnlocked: userSkillLevel > 0 || skill.skillLevel === 'beginner' || skill.skillLevel === 'entry',
-                isRecommended: skill.marketDemand > 80,
-                position: { x: (index % 4) * 300, y: Math.floor(index / 4) * 200 }, // Simple grid layout
-                connections: skill.prerequisites, // Prerequisites as connections
-                urgency: skill.marketDemand > 90 ? 'high' : skill.marketDemand > 75 ? 'medium' : 'low'
-              };
-            });
-            
-            setHardSkillsData(hardSkillNodes);
-          } catch (error) {
-            console.error('Error loading O*NET hard skills:', error);
-            // Fallback to existing service
             const hardSkills = await skillService.getHardSkillsForCareer(currentUser.uid, careerPath);
             setHardSkillsData(hardSkills);
+          } catch (error) {
+            console.error('Error loading hard skills:', error);
+            setHardSkillsData([]);
           }
+        }
+        
+        // Transform data for interactive mode (handled by InteractiveSkillTree component)
+        if (interactive) {
+          const enhancedSoftSkills = transformToEnhancedFormat(softSkills, 'Soft Skills', '#10B981');
+          const enhancedHardSkills = transformToEnhancedFormat([], 'Technical Skills', '#3B82F6'); // Empty for now, handled by InteractiveSkillTree
+          
+          setSkillTreeData({
+            soft: enhancedSoftSkills,
+            technical: enhancedHardSkills
+          });
         }
         
         // TODO: Load certifications data
@@ -175,7 +233,98 @@ const SkillTree: React.FC<SkillTreeProps> = ({ careerPath = 'general' }) => {
     };
     
     loadSkillData();
-  }, [currentUser, careerPath]);
+  }, [currentUser, careerPath, interactive]);
+
+  // Interactive skill tree helper functions
+  const canUnlockSkill = (skill: EnhancedSkill) => {
+    if (!skillTreeData[activeTree]) return false;
+    return skill.prerequisites.every(prereqId => {
+      const prereqSkill = findSkillById(prereqId);
+      return prereqSkill && prereqSkill.currentPoints > 0;
+    });
+  };
+
+  const findSkillById = (skillId: string) => {
+    for (const tree of Object.values(skillTreeData)) {
+      for (const section of tree.sections) {
+        const skill = section.skills.find(s => s.id === skillId);
+        if (skill) return skill;
+      }
+    }
+    return null;
+  };
+
+  const addPoint = (skillId: string) => {
+    if (availablePoints <= 0) return;
+
+    setSkillTreeData(prev => {
+      const newData = JSON.parse(JSON.stringify(prev));
+      const currentTreeData = newData[activeTree];
+      
+      for (const section of currentTreeData.sections) {
+        const skill = section.skills.find((s: EnhancedSkill) => s.id === skillId);
+        if (skill && skill.currentPoints < skill.maxPoints) {
+          skill.currentPoints += 1;
+          currentTreeData.totalPoints += 1;
+          break;
+        }
+      }
+      
+      return newData;
+    });
+    
+    setAvailablePoints(prev => prev - 1);
+  };
+
+  const removePoint = (skillId: string) => {
+    setSkillTreeData(prev => {
+      const newData = JSON.parse(JSON.stringify(prev));
+      const currentTreeData = newData[activeTree];
+      
+      for (const section of currentTreeData.sections) {
+        const skill = section.skills.find((s: EnhancedSkill) => s.id === skillId);
+        if (skill && skill.currentPoints > 0) {
+          skill.currentPoints -= 1;
+          currentTreeData.totalPoints -= 1;
+          break;
+        }
+      }
+      
+      return newData;
+    });
+    
+    setAvailablePoints(prev => prev + 1);
+  };
+
+  const resetPoints = () => {
+    setSkillTreeData(prev => {
+      const newData = JSON.parse(JSON.stringify(prev)) as {[key: string]: EnhancedSkillTreeData};
+      let totalPointsToReturn = 0;
+      
+      for (const tree of Object.values(newData)) {
+        for (const section of tree.sections) {
+          for (const skill of section.skills) {
+            totalPointsToReturn += skill.currentPoints;
+            skill.currentPoints = 0;
+          }
+        }
+        tree.totalPoints = 0;
+      }
+      
+      return newData;
+    });
+    
+    setAvailablePoints(70);
+  };
+
+  const handleMouseMove = (event: React.MouseEvent, skill: EnhancedSkill) => {
+    if (hoveredSkill?.id === skill.id) {
+      setTooltipPosition({
+        x: event.clientX + 10,
+        y: event.clientY - 10
+      });
+    }
+  };
 
   // Handle tab change
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
@@ -230,6 +379,46 @@ const SkillTree: React.FC<SkillTreeProps> = ({ careerPath = 'general' }) => {
       case SkillProficiencyLevel.EXPERT: return 'Expert';
       default: return 'Unknown';
     }
+  };
+
+  // Render skill connections for interactive mode
+  const renderConnections = () => {
+    if (!skillTreeData[activeTree]) return [];
+    
+    const currentTreeData = skillTreeData[activeTree];
+    const connections: JSX.Element[] = [];
+
+    currentTreeData.sections.forEach(section => {
+      section.skills.forEach(skill => {
+        skill.prerequisites.forEach(prereqId => {
+          const prereqSkill = findSkillById(prereqId);
+          if (prereqSkill) {
+            const isActive = skill.currentPoints > 0 && prereqSkill.currentPoints > 0;
+            connections.push(
+              <line
+                key={`${prereqId}-${skill.id}`}
+                x1={prereqSkill.position.x}
+                y1={prereqSkill.position.y}
+                x2={skill.position.x}
+                y2={skill.position.y}
+                stroke={isActive ? section.color : '#6B7280'}
+                strokeWidth={isActive ? 3 : 2}
+                strokeDasharray={isActive ? '0' : '5,5'}
+                opacity={isActive ? 1 : 0.4}
+              />
+            );
+          }
+        });
+      });
+    });
+
+    return connections;
+  };
+
+  const getSectionFillPercentage = (section: SkillSection) => {
+    const totalPoints = section.skills.reduce((sum, skill) => sum + skill.currentPoints, 0);
+    const maxPoints = section.skills.reduce((sum, skill) => sum + skill.maxPoints, 0);
+    return maxPoints > 0 ? (totalPoints / maxPoints) * 100 : 0;
   };
 
   // Get skill icon based on category and type
@@ -444,6 +633,338 @@ const SkillTree: React.FC<SkillTreeProps> = ({ careerPath = 'general' }) => {
     );
   }
 
+  // Interactive Skill Tree Render - Use new dedicated component
+  if (interactive) {
+    return (
+      <InteractiveSkillTree
+        careerPath={careerPath}
+        onPointAllocation={(skillId, points) => {
+          console.log(`Allocated ${points} points to skill ${skillId}`);
+        }}
+        onSkillUnlock={(skillId) => {
+          console.log(`Skill ${skillId} unlocked!`);
+        }}
+      />
+    );
+  }
+
+  // Legacy Interactive Skill Tree Render (keeping as fallback)
+  if (false && skillTreeData[activeTree]) {
+    const currentTreeData = skillTreeData[activeTree];
+    
+    const containerStyle = {
+      width: '100%',
+      height: '800px',
+      position: 'relative',
+      fontFamily: 'Arial, sans-serif',
+      backgroundColor: theme.palette.mode === 'dark' ? '#1a1a1a' : '#f5f5f5',
+      color: theme.palette.text.primary,
+      borderRadius: 2
+    };
+
+    const headerStyle = {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 2,
+      padding: 2,
+      backgroundColor: theme.palette.background.paper,
+      borderRadius: 1
+    };
+
+    return (
+      <Box sx={containerStyle}>
+        {/* Interactive Header */}
+        <Box sx={headerStyle}>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            {Object.entries(skillTreeData).map(([key, data]) => (
+              <Button
+                key={key}
+                variant={activeTree === key ? 'contained' : 'outlined'}
+                onClick={() => setActiveTree(key)}
+                sx={{
+                  backgroundColor: activeTree === key ? data.color : 'transparent',
+                  borderColor: data.color,
+                  color: activeTree === key ? 'white' : data.color,
+                  '&:hover': {
+                    backgroundColor: `${data.color}20`
+                  }
+                }}
+              >
+                {data.name} ({data.totalPoints}/{data.maxPoints})
+              </Button>
+            ))}
+          </Box>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Chip
+              label={`Available Points: ${availablePoints}`}
+              color="primary"
+              variant="outlined"
+            />
+            <Button
+              variant="contained"
+              color="error"
+              size="small"
+              onClick={resetPoints}
+            >
+              Reset All
+            </Button>
+          </Box>
+        </Box>
+
+        {/* Interactive Canvas */}
+        <Paper
+          sx={{
+            width: '100%',
+            height: '700px',
+            position: 'relative',
+            backgroundColor: theme.palette.background.default,
+            border: `2px solid ${currentTreeData.color}40`,
+            overflow: 'hidden'
+          }}
+        >
+          {/* Section Backgrounds */}
+          {currentTreeData.sections.map((section, index) => {
+            const fillPercentage = getSectionFillPercentage(section);
+            return (
+              <Box
+                key={section.id}
+                sx={{
+                  position: 'absolute',
+                  width: '45%',
+                  height: '90%',
+                  left: index === 0 ? '2%' : '52%',
+                  top: '5%',
+                  borderRadius: 1,
+                  border: `2px solid ${section.color}60`,
+                  background: `linear-gradient(135deg, 
+                    ${section.color}20 0%, 
+                    ${section.color}${Math.floor(Math.min(80, fillPercentage / 100 * 60)).toString(16).padStart(2, '0')} 100%
+                  )`,
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  p: 1
+                }}
+              >
+                <Typography
+                  variant="h6"
+                  sx={{
+                    color: section.color,
+                    fontWeight: 'bold'
+                  }}
+                >
+                  {section.name}
+                </Typography>
+              </Box>
+            );
+          })}
+
+          {/* SVG Connections */}
+          <svg
+            ref={svgRef}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              pointerEvents: 'none'
+            }}
+          >
+            {renderConnections()}
+          </svg>
+
+          {/* Interactive Skill Nodes */}
+          {currentTreeData.sections.map(section => 
+            section.skills.map(skill => {
+              const isUnlocked = skill.isUnlocked || canUnlockSkill(skill);
+              const canAddPoint = isUnlocked && skill.currentPoints < skill.maxPoints && availablePoints > 0;
+              const canRemovePoint = skill.currentPoints > 0;
+
+              return (
+                <Box
+                  key={skill.id}
+                  sx={{
+                    position: 'absolute',
+                    left: skill.position.x - 50,
+                    top: skill.position.y - 50,
+                    width: 100,
+                    height: 120,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    cursor: isUnlocked ? 'pointer' : 'not-allowed'
+                  }}
+                  onMouseEnter={(e) => {
+                    setHoveredSkill(skill);
+                    setTooltipPosition({ x: e.clientX + 10, y: e.clientY - 10 });
+                  }}
+                  onMouseLeave={() => setHoveredSkill(null)}
+                  onMouseMove={(e) => handleMouseMove(e, skill)}
+                >
+                  {/* Skill Circle */}
+                  <Box
+                    sx={{
+                      width: 60,
+                      height: 60,
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      position: 'relative',
+                      background: isUnlocked 
+                        ? `linear-gradient(135deg, ${section.color}, ${section.color}cc)`
+                        : `linear-gradient(135deg, ${theme.palette.grey[600]}, ${theme.palette.grey[500]})`,
+                      border: `3px solid ${isUnlocked ? section.color : theme.palette.grey[600]}`,
+                      color: 'white',
+                      fontSize: 24,
+                      fontWeight: 'bold',
+                      transform: hoveredSkill?.id === skill.id && isUnlocked ? 'scale(1.1)' : 'scale(1)',
+                      transition: 'all 0.3s ease',
+                      boxShadow: hoveredSkill?.id === skill.id && isUnlocked ? `0 0 20px ${section.color}80` : 'none'
+                    }}
+                  >
+                    {isUnlocked ? (
+                      skill.currentPoints > 0 ? '★' : '○'
+                    ) : (
+                      '🔒'
+                    )}
+
+                    {/* Point indicator */}
+                    {skill.currentPoints > 0 && (
+                      <Box
+                        sx={{
+                          position: 'absolute',
+                          top: -5,
+                          right: -5,
+                          width: 24,
+                          height: 24,
+                          borderRadius: '50%',
+                          backgroundColor: theme.palette.success.main,
+                          color: 'white',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: 12,
+                          fontWeight: 'bold'
+                        }}
+                      >
+                        {skill.currentPoints}
+                      </Box>
+                    )}
+                  </Box>
+
+                  {/* Skill Name */}
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      mt: 0.5,
+                      textAlign: 'center',
+                      fontSize: 10,
+                      fontWeight: 'bold',
+                      lineHeight: 1.2,
+                      color: isUnlocked ? theme.palette.text.primary : theme.palette.text.disabled
+                    }}
+                  >
+                    {skill.name}
+                  </Typography>
+
+                  {/* Point Controls */}
+                  {isUnlocked && (
+                    <Box sx={{ display: 'flex', gap: 0.5, mt: 0.5 }}>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        color="error"
+                        onClick={() => removePoint(skill.id)}
+                        disabled={!canRemovePoint}
+                        sx={{
+                          minWidth: 20,
+                          width: 20,
+                          height: 20,
+                          p: 0,
+                          fontSize: 12
+                        }}
+                      >
+                        −
+                      </Button>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        color="primary"
+                        onClick={() => addPoint(skill.id)}
+                        disabled={!canAddPoint}
+                        sx={{
+                          minWidth: 20,
+                          width: 20,
+                          height: 20,
+                          p: 0,
+                          fontSize: 12
+                        }}
+                      >
+                        +
+                      </Button>
+                    </Box>
+                  )}
+                </Box>
+              );
+            })
+          )}
+
+          {/* Interactive Tooltip */}
+          {hoveredSkill && (
+            <Tooltip
+              title={
+                <Box>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                    {hoveredSkill?.name || 'Unknown Skill'}
+                  </Typography>
+                  <Typography variant="body2" sx={{ mb: 1 }}>
+                    {hoveredSkill?.description || 'No description available'}
+                  </Typography>
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: 10 }}>
+                    <span>Points: {hoveredSkill?.currentPoints || 0}/{hoveredSkill?.maxPoints || 5}</span>
+                    {(hoveredSkill?.prerequisites?.length || 0) > 0 && (
+                      <span>Requires: {hoveredSkill?.prerequisites?.join(', ') || ''}</span>
+                    )}
+                  </Box>
+                </Box>
+              }
+              open={true}
+              placement="top"
+              arrow
+            >
+              <Box
+                sx={{
+                  position: 'fixed',
+                  left: tooltipPosition.x,
+                  top: tooltipPosition.y,
+                  pointerEvents: 'none',
+                  zIndex: 1000
+                }}
+              />
+            </Tooltip>
+          )}
+        </Paper>
+
+        {/* Mode Toggle */}
+        <Box sx={{ mt: 2, textAlign: 'center' }}>
+          <Button
+            variant="outlined"
+            onClick={() => window.location.reload()} // Simple way to toggle back
+            sx={{ mr: 2 }}
+          >
+            Switch to Classic View
+          </Button>
+          <Typography variant="caption" color="text.secondary">
+            💡 Use + and − buttons to allocate skill points • Hover over skills for details
+          </Typography>
+        </Box>
+      </Box>
+    );
+  }
+
   return (
     <Box sx={{ minHeight: '70vh' }}>
       {/* Skill Type Tabs */}
@@ -582,7 +1103,14 @@ const SkillTree: React.FC<SkillTreeProps> = ({ careerPath = 'general' }) => {
 
       {/* Instructions */}
       <Box sx={{ mt: 3, textAlign: 'center' }}>
-        <Typography variant="caption" color="text.secondary">
+        <Button
+          variant="outlined"
+          onClick={() => window.location.href = window.location.href + '?interactive=true'} // Simple toggle
+          sx={{ mr: 2 }}
+        >
+          Try Interactive Mode
+        </Button>
+        <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 1 }}>
           💡 Click the assessment button on skills to update your proficiency level
         </Typography>
       </Box>
