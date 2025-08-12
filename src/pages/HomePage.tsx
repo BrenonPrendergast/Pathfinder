@@ -179,13 +179,7 @@ const HomePage: React.FC = () => {
                 size="large"
                 endIcon={<ArrowForward />}
                 onClick={() => navigate('/dashboard')}
-                sx={{ 
-                  fontSize: '1.1rem', 
-                  px: 5, 
-                  py: 1.5,
-                  backgroundColor: '#29CF4D',
-                  '&:hover': { backgroundColor: '#22B542' }
-                }}
+                sx={{ fontSize: '1.1rem', px: 5, py: 1.5 }}
               >
                 Continue Your Journey
               </Button>
@@ -208,13 +202,7 @@ const HomePage: React.FC = () => {
                 size="large"
                 endIcon={<ArrowForward />}
                 onClick={() => navigate('/auth')}
-                sx={{ 
-                  fontSize: '1.1rem', 
-                  px: 5, 
-                  py: 1.5,
-                  backgroundColor: '#29CF4D',
-                  '&:hover': { backgroundColor: '#22B542' }
-                }}
+                sx={{ fontSize: '1.1rem', px: 5, py: 1.5 }}
               >
                 Start Your Adventure
               </Button>
@@ -240,32 +228,43 @@ const HomePage: React.FC = () => {
               sx={{ 
                 display: 'inline-flex', 
                 alignItems: 'center', 
-                gap: 6, 
+                gap: 3, 
                 mb: 3,
                 '&::before, &::after': {
                   content: '""',
-                  height: '3px',
-                  width: 80,
-                  background: 'linear-gradient(to right, transparent, rgba(99, 102, 241, 0.7), transparent)',
+                  height: '1px',
+                  width: 32,
+                  background: 'linear-gradient(to right, transparent, rgba(99, 102, 241, 0.5), transparent)',
                 }
               }}
             >
               <Typography
-                variant="h5"
+                variant="body2"
                 sx={{
                   background: 'linear-gradient(to right, #6366f1, #c7d2fe)',
                   backgroundClip: 'text',
                   WebkitBackgroundClip: 'text',
                   color: 'transparent',
-                  fontWeight: 700,
+                  fontWeight: 600,
                   textTransform: 'uppercase',
-                  letterSpacing: '0.15em',
-                  fontSize: { xs: '1.2rem', md: '1.5rem' },
+                  letterSpacing: '0.1em',
                 }}
               >
                 How it Works
               </Typography>
             </Box>
+            
+            <GradientText
+              variant="h2"
+              component="h2"
+              animated={true}
+              sx={{ 
+                mb: 3,
+                fontSize: { xs: '5rem', md: '4rem' }
+              }}
+            >
+              How It Works
+            </GradientText>
             
             <Typography
               variant="body1"
@@ -278,8 +277,8 @@ const HomePage: React.FC = () => {
                 mb: 4,
               }}
             >
-              Pathfinder provides a structured framework for career development, 
-              making professional growth transparent and measurable.
+              Pathfinder provides a structured framework for career development, making 
+              professional growth transparent and measurable. 
             </Typography>
           </Box>
 
@@ -299,12 +298,10 @@ const HomePage: React.FC = () => {
                   <CardContent
                     sx={{
                       flexGrow: 1,
-                      display: 'flex',
-                      flexDirection: 'column',
                       textAlign: 'center',
                       pt: 4,
                       px: 3,
-                      pb: 3,
+                      pb: 2,
                     }}
                   >
                     <Box
@@ -342,9 +339,6 @@ const HomePage: React.FC = () => {
                         lineHeight: 1.6,
                         opacity: 0.8,
                         mb: 3,
-                        flex: 1,
-                        display: 'flex',
-                        alignItems: 'center',
                       }}
                     >
                       {feature.description}
@@ -354,11 +348,7 @@ const HomePage: React.FC = () => {
                       variant="contained"
                       endIcon={<ArrowForward />}
                       onClick={feature.action}
-                      sx={{ 
-                        minWidth: '140px',
-                        backgroundColor: '#29CF4D',
-                        '&:hover': { backgroundColor: '#22B542' }
-                      }}
+                      sx={{ minWidth: '140px' }}
                     >
                       {feature.buttonText}
                     </Button>
@@ -382,7 +372,7 @@ const HomePage: React.FC = () => {
               variant="h3" 
               component="h2" 
               sx={{ textAlign: 'center', mb: 4 }}
-              animated={false}
+              animated={true}
             >
               Join the Community
             </GradientText>
@@ -471,8 +461,7 @@ const HomePage: React.FC = () => {
                   fontSize: '1.1rem', 
                   px: 6, 
                   py: 2,
-                  backgroundColor: '#29CF4D',
-                  '&:hover': { backgroundColor: '#22B542' }
+                  background: 'linear-gradient(135deg, #059669, #6366f1)',
                 }}
               >
                 Get Started Free
