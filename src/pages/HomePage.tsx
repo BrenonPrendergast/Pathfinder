@@ -22,10 +22,8 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import GradientText from '../components/GradientText';
-import BackgroundShape from '../components/BackgroundShape';
 import GamingBackground from '../components/backgrounds/GamingBackground';
 import FloatingNodes from '../components/backgrounds/FloatingNodes';
-import DynamicGradients from '../components/backgrounds/DynamicGradients';
 import InteractiveSpotlight from '../components/backgrounds/InteractiveSpotlight';
 
 const HomePage: React.FC = () => {
@@ -71,20 +69,7 @@ const HomePage: React.FC = () => {
       {/* Gaming Background Layers */}
       <GamingBackground variant="combined" intensity="medium" />
       <FloatingNodes nodeCount={20} connectionOpacity={0.12} />
-      <DynamicGradients variant="aurora" speed="medium" intensity="subtle" />
-      <InteractiveSpotlight size="large" intensity="medium" color="multi" />
-
-      {/* Legacy Background Shape for compatibility */}
-      <BackgroundShape 
-        variant="blur-gray"
-        position={{ 
-          top: 0,
-          left: '50%',
-          transform: 'translateX(-50%) translateY(-20%)',
-        }}
-        opacity={0.3}
-        zIndex={-3}
-      />
+      <InteractiveSpotlight size="large" intensity="subtle" color="primary" />
 
       <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 10 }}>
         {/* Hero Section */}
@@ -204,17 +189,6 @@ const HomePage: React.FC = () => {
 
         {/* Features Section */}
         <Box sx={{ py: { xs: 8, md: 12 }, position: 'relative' }}>
-          {/* Background decoration */}
-          <BackgroundShape 
-            variant="blur"
-            position={{ 
-              bottom: 0,
-              left: '50%',
-              transform: 'translateX(-120%) translateY(50%)',
-            }}
-            opacity={0.5}
-            zIndex={-1}
-          />
           
           {/* Section header with decorative elements */}
           <Box sx={{ textAlign: 'center', mb: 8 }}>
@@ -411,17 +385,6 @@ const HomePage: React.FC = () => {
             position: 'relative',
           }}
         >
-          {/* Background decoration for CTA */}
-          <BackgroundShape 
-            variant="blur"
-            position={{ 
-              bottom: 0,
-              left: '50%',
-              transform: 'translateX(20%) translateY(60%)',
-            }}
-            opacity={0.4}
-            zIndex={-1}
-          />
           
           <GradientText
             variant="h3"

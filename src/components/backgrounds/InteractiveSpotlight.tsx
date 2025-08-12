@@ -53,10 +53,10 @@ export default function InteractiveSpotlight({
 
   const getIntensityOpacity = () => {
     switch (intensity) {
-      case 'subtle': return 0.08;
-      case 'medium': return 0.12;
-      case 'bright': return 0.18;
-      default: return 0.12;
+      case 'subtle': return 0.04;
+      case 'medium': return 0.08;
+      case 'bright': return 0.12;
+      default: return 0.04;
     }
   };
 
