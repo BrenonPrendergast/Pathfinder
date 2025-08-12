@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -21,14 +21,35 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { statsService, type SiteStats } from '../services/stats/stats.service';
 import GradientText from '../components/GradientText';
 import GamingBackground from '../components/backgrounds/GamingBackground';
 import FloatingNodes from '../components/backgrounds/FloatingNodes';
 import InteractiveSpotlight from '../components/backgrounds/InteractiveSpotlight';
+import PathfinderLogo from '../components/PathfinderLogo';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser, userProfile } = useAuth();
+  const [stats, setStats] = useState<SiteStats>({
+    activeUsers: 0,
+    careerPaths: 0,
+    totalQuests: 0,
+    totalAchievements: 0
+  });
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const siteStats = await statsService.getSiteStats();
+        setStats(siteStats);
+      } catch (error) {
+        console.error('Error loading site stats:', error);
+      }
+    };
+
+    loadStats();
+  }, []);
 
   const features = [
     {
@@ -57,11 +78,11 @@ const HomePage: React.FC = () => {
     },
   ];
 
-  const stats = [
-    { icon: <People />, label: 'Active Learners', value: '1,000+' },
-    { icon: <Work />, label: 'Career Paths', value: '500+' },
-    { icon: <School />, label: 'Learning Quests', value: '2,000+' },
-    { icon: <EmojiEvents />, label: 'Achievements', value: '100+' },
+  const statsDisplay = [
+    { icon: <People />, label: 'Active Learners', value: statsService.formatNumber(stats.activeUsers) },
+    { icon: <Work />, label: 'Career Paths', value: stats.careerPaths.toString() },
+    { icon: <School />, label: 'Learning Quests', value: statsService.formatNumber(stats.totalQuests) },
+    { icon: <EmojiEvents />, label: 'Achievements', value: stats.totalAchievements.toString() },
   ];
 
   return (
@@ -73,19 +94,30 @@ const HomePage: React.FC = () => {
 
       <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 10 }}>
         {/* Hero Section */}
-        <Box sx={{ textAlign: 'center', py: { xs: 8, md: 12 } }}>
-          <GradientText
-            variant="h1"
-            component="h1" 
-            animated={true}
-            data-aos="fade-up"
+        <Box sx={{ textAlign: 'center', py: { xs: 6, md: 8 } }}>
+          <Box 
             sx={{ 
-              mb: 3,
-              fontSize: { xs: '2.5rem', md: '3.5rem' },
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              gap: 1, 
+              mb: 2 
             }}
+            data-aos="fade-up"
           >
-            🎮 Pathfinder
-          </GradientText>
+            <PathfinderLogo size={80} />
+            <GradientText
+              variant="h1"
+              component="h1" 
+              animated={true}
+              sx={{ 
+                fontSize: { xs: '2.5rem', md: '3.5rem' },
+                mb: 0,
+              }}
+            >
+              Pathfinder
+            </GradientText>
+          </Box>
           
           <Typography
             variant="h5"
@@ -147,7 +179,13 @@ const HomePage: React.FC = () => {
                 size="large"
                 endIcon={<ArrowForward />}
                 onClick={() => navigate('/dashboard')}
-                sx={{ fontSize: '1.1rem', px: 5, py: 1.5 }}
+                sx={{ 
+                  fontSize: '1.1rem', 
+                  px: 5, 
+                  py: 1.5,
+                  backgroundColor: '#29CF4D',
+                  '&:hover': { backgroundColor: '#22B542' }
+                }}
               >
                 Continue Your Journey
               </Button>
@@ -170,7 +208,13 @@ const HomePage: React.FC = () => {
                 size="large"
                 endIcon={<ArrowForward />}
                 onClick={() => navigate('/auth')}
-                sx={{ fontSize: '1.1rem', px: 5, py: 1.5 }}
+                sx={{ 
+                  fontSize: '1.1rem', 
+                  px: 5, 
+                  py: 1.5,
+                  backgroundColor: '#29CF4D',
+                  '&:hover': { backgroundColor: '#22B542' }
+                }}
               >
                 Start Your Adventure
               </Button>
@@ -188,48 +232,40 @@ const HomePage: React.FC = () => {
         </Box>
 
         {/* Features Section */}
-        <Box sx={{ py: { xs: 8, md: 12 }, position: 'relative' }}>
+        <Box sx={{ pt: { xs: 2, md: 3 }, pb: { xs: 4, md: 6 }, position: 'relative' }}>
           
           {/* Section header with decorative elements */}
-          <Box sx={{ textAlign: 'center', mb: 8 }}>
+          <Box sx={{ textAlign: 'center', mb: 4 }}>
             <Box 
               sx={{ 
                 display: 'inline-flex', 
                 alignItems: 'center', 
-                gap: 3, 
+                gap: 6, 
                 mb: 3,
                 '&::before, &::after': {
                   content: '""',
-                  height: '1px',
-                  width: 32,
-                  background: 'linear-gradient(to right, transparent, rgba(99, 102, 241, 0.5), transparent)',
+                  height: '3px',
+                  width: 80,
+                  background: 'linear-gradient(to right, transparent, rgba(99, 102, 241, 0.7), transparent)',
                 }
               }}
             >
               <Typography
-                variant="body2"
+                variant="h5"
                 sx={{
                   background: 'linear-gradient(to right, #6366f1, #c7d2fe)',
                   backgroundClip: 'text',
                   WebkitBackgroundClip: 'text',
                   color: 'transparent',
-                  fontWeight: 600,
+                  fontWeight: 700,
                   textTransform: 'uppercase',
-                  letterSpacing: '0.1em',
+                  letterSpacing: '0.15em',
+                  fontSize: { xs: '1.2rem', md: '1.5rem' },
                 }}
               >
-                Game-Changing Features
+                How it Works
               </Typography>
             </Box>
-            
-            <GradientText
-              variant="h2"
-              component="h2"
-              animated={true}
-              sx={{ mb: 3 }}
-            >
-              How It Works
-            </GradientText>
             
             <Typography
               variant="body1"
@@ -239,14 +275,15 @@ const HomePage: React.FC = () => {
                 mx: 'auto',
                 fontSize: '1.125rem',
                 opacity: 0.8,
+                mb: 4,
               }}
             >
-              Pathfinder gamifies career development with RPG-style progression, 
-              making professional growth engaging and rewarding.
+              Pathfinder provides a structured framework for career development, 
+              making professional growth transparent and measurable.
             </Typography>
           </Box>
 
-          <Grid container spacing={4} sx={{ mb: 8 }}>
+          <Grid container spacing={4} sx={{ mb: 4 }}>
             {features.map((feature, index) => (
               <Grid item xs={12} md={4} key={index}>
                 <Card
@@ -256,15 +293,18 @@ const HomePage: React.FC = () => {
                     height: '100%',
                     display: 'flex',
                     flexDirection: 'column',
+                    background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)',
                   }}
                 >
                   <CardContent
                     sx={{
                       flexGrow: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
                       textAlign: 'center',
                       pt: 4,
                       px: 3,
-                      pb: 2,
+                      pb: 3,
                     }}
                   >
                     <Box
@@ -302,6 +342,9 @@ const HomePage: React.FC = () => {
                         lineHeight: 1.6,
                         opacity: 0.8,
                         mb: 3,
+                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
                       }}
                     >
                       {feature.description}
@@ -311,7 +354,11 @@ const HomePage: React.FC = () => {
                       variant="contained"
                       endIcon={<ArrowForward />}
                       onClick={feature.action}
-                      sx={{ minWidth: '140px' }}
+                      sx={{ 
+                        minWidth: '140px',
+                        backgroundColor: '#29CF4D',
+                        '&:hover': { backgroundColor: '#22B542' }
+                      }}
                     >
                       {feature.buttonText}
                     </Button>
@@ -325,8 +372,8 @@ const HomePage: React.FC = () => {
         {/* Stats Section */}
         <Card 
           sx={{ 
-            py: 8, 
-            mb: 8,
+            py: 6, 
+            mb: 4,
             background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)',
           }}
         >
@@ -334,14 +381,14 @@ const HomePage: React.FC = () => {
             <GradientText
               variant="h3" 
               component="h2" 
-              sx={{ textAlign: 'center', mb: 6 }}
-              animated={true}
+              sx={{ textAlign: 'center', mb: 4 }}
+              animated={false}
             >
               Join the Community
             </GradientText>
             
             <Grid container spacing={4}>
-              {stats.map((stat, index) => (
+              {statsDisplay.map((stat, index) => (
                 <Grid item xs={6} md={3} key={index}>
                   <Box 
                     sx={{ textAlign: 'center' }}
@@ -381,7 +428,7 @@ const HomePage: React.FC = () => {
         <Box 
           sx={{ 
             textAlign: 'center', 
-            py: { xs: 8, md: 12 },
+            py: { xs: 6, md: 8 },
             position: 'relative',
           }}
         >
@@ -389,7 +436,7 @@ const HomePage: React.FC = () => {
           <GradientText
             variant="h3"
             component="h2"
-            sx={{ mb: 4 }}
+            sx={{ mb: 3 }}
             data-aos="fade-up"
           >
             Ready to Level Up Your Career?
@@ -401,7 +448,7 @@ const HomePage: React.FC = () => {
             data-aos="fade-up"
             data-aos-delay={200}
             sx={{ 
-              mb: 6, 
+              mb: 4, 
               maxWidth: '500px', 
               mx: 'auto',
               fontSize: '1.125rem',
@@ -424,7 +471,8 @@ const HomePage: React.FC = () => {
                   fontSize: '1.1rem', 
                   px: 6, 
                   py: 2,
-                  background: 'linear-gradient(135deg, #059669, #6366f1)',
+                  backgroundColor: '#29CF4D',
+                  '&:hover': { backgroundColor: '#22B542' }
                 }}
               >
                 Get Started Free

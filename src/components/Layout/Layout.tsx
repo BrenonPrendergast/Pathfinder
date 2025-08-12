@@ -28,6 +28,7 @@ import {
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import GamingAppBar from '../gaming/GamingAppBar';
+import PathfinderLogo from '../PathfinderLogo';
 
 const drawerWidth = 280;
 
@@ -91,9 +92,30 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
       <Box sx={{ p: 2, borderBottom: 1, borderColor: 'divider' }}>
-        <Typography variant="h6" fontWeight="bold" color="primary">
-          🎮 Pathfinder
-        </Typography>
+        <Box 
+          sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 1.5,
+            cursor: 'pointer',
+          }}
+          onClick={() => navigate('/')}
+        >
+          <PathfinderLogo size="sm" />
+          <Typography 
+            variant="h6" 
+            fontWeight="bold"
+            sx={{
+              background: 'linear-gradient(to right, #e5e7eb, #c7d2fe, #f9fafb, #a5b4fc, #e5e7eb)',
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              color: 'transparent',
+              fontFamily: '"Nacelle", sans-serif',
+            }}
+          >
+            Pathfinder
+          </Typography>
+        </Box>
         {userProfile && (
           <Box sx={{ mt: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>

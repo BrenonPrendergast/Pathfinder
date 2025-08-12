@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Pathfinder is a career exploration web application built with React, TypeScript, and Firebase. It helps users explore career paths through a gamified experience with quests, skills tracking, achievements, and role-based access control.
+Pathfinder is a career exploration web application built with React, TypeScript, and Firebase. It provides a structured framework for career development, making professional growth transparent and measurable through comprehensive career exploration, skills tracking, learning quests, and achievement systems.
 
 **Live URL:** https://pathfinder-000.web.app
 **Firebase Project:** pathfinder-000
@@ -46,7 +46,9 @@ firebase deploy --only firestore:rules
 - **Database**: Firestore with real-time updates
 - **State Management**: React Context (AuthContext) for global state
 - **Routing**: React Router v7 with protected routes
-- **Theme**: Custom Material-UI theme with blue/purple palette
+- **Theme**: Custom Material-UI theme with green/purple gradient palette
+- **Design System**: Gaming-inspired UI with particle effects, interactive backgrounds, and custom PathfinderLogo component
+- **Background Effects**: Interactive particle systems, floating nodes, and subtle cursor effects
 
 ### Data Models
 - **Career**: Job information with O*NET codes, skills, salary data, and career fields
@@ -65,6 +67,11 @@ firebase deploy --only firestore:rules
 ### Key Components
 - **AuthContext** (`src/contexts/AuthContext.tsx`): User authentication and profile management
 - **Layout** (`src/components/Layout/Layout.tsx`): Navigation and layout wrapper
+- **PathfinderLogo** (`src/components/PathfinderLogo.tsx`): Custom SVG logo component with size variants
+- **GamingBackground** (`src/components/backgrounds/GamingBackground.tsx`): Particle animation system
+- **FloatingNodes** (`src/components/backgrounds/FloatingNodes.tsx`): Interactive node network visualization
+- **InteractiveSpotlight** (`src/components/backgrounds/InteractiveSpotlight.tsx`): Cursor particle effects
+- **StatsService** (`src/services/stats/stats.service.ts`): Real-time database statistics
 - **ProtectedRoute**: Route guards for authenticated users
 - **AdminPage**: User management and content administration
 - **CareerFieldCategories** (`src/services/firestore.ts`): 18 standardized career field classifications

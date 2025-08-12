@@ -1,6 +1,6 @@
 # Pathfinder 🎯
 
-A comprehensive career exploration and development platform with AI-powered personality-based recommendations, built with React and Firebase.
+A structured framework for career development, making professional growth transparent and measurable through comprehensive career exploration, AI-powered assessments, and skill tracking systems.
 
 **🌐 Live Application:** [https://pathfinder-000.web.app](https://pathfinder-000.web.app)
 
@@ -39,7 +39,8 @@ A comprehensive career exploration and development platform with AI-powered pers
 - **Database**: Firestore with real-time updates and security rules
 - **State Management**: React Context with custom hooks
 - **Routing**: React Router v7 with protected routes
-- **Theme**: Custom Material-UI theme with blue/purple palette
+- **Theme**: Custom Material-UI theme with green/purple gradient palette
+- **Design System**: Gaming-inspired UI with interactive particle effects and custom PathfinderLogo component
 
 ### Backend Services
 - **Firebase Firestore**: NoSQL database with real-time sync
