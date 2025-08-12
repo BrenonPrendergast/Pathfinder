@@ -44,19 +44,19 @@ export default function InteractiveSpotlight({
 
   const getSpotlightSize = () => {
     switch (size) {
-      case 'small': return 400;
-      case 'medium': return 600;
-      case 'large': return 800;
-      default: return 600;
+      case 'small': return 200;
+      case 'medium': return 300;
+      case 'large': return 400;
+      default: return 300;
     }
   };
 
   const getIntensityOpacity = () => {
     switch (intensity) {
-      case 'subtle': return 0.04;
-      case 'medium': return 0.08;
-      case 'bright': return 0.12;
-      default: return 0.04;
+      case 'subtle': return 0.025;
+      case 'medium': return 0.04;
+      case 'bright': return 0.06;
+      default: return 0.025;
     }
   };
 
@@ -81,14 +81,14 @@ export default function InteractiveSpotlight({
     background: color === 'multi' 
       ? `radial-gradient(${spotlightSize}px circle at ${mousePos.x}% ${mousePos.y}%, 
          hsla(var(--primary), ${opacity}), 
-         hsla(var(--accent), ${opacity * 0.7}) 40%, 
-         transparent 70%)`
+         hsla(var(--accent), ${opacity * 0.7}) 30%, 
+         transparent 50%)`
       : `radial-gradient(${spotlightSize}px circle at ${mousePos.x}% ${mousePos.y}%, 
          ${getSpotlightColor().replace('hsl', 'hsla').replace(')', `, ${opacity})`)} 0%, 
-         transparent 70%)`,
+         transparent 50%)`,
     transition: isActive ? 'none' : 'opacity 0.3s ease-out',
     opacity: isActive ? 1 : 0.7,
-    filter: blur ? 'blur(1px)' : 'none',
+    filter: blur ? 'blur(0.5px)' : 'none',
   } as React.CSSProperties;
 
   return (
