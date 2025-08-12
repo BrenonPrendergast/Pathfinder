@@ -29,7 +29,8 @@
       "Bash(npx tailwindcss init:*)",
       "Bash(npx tailwindcss:*)",
       "Bash(PORT=3002 npm start)",
-      "Bash(npm uninstall:*)"
+      "Bash(npm uninstall:*)",
+      "Bash(git rm:*)"
     ],
     "deny": []
   }
