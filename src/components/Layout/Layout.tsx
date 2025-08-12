@@ -1,9 +1,5 @@
 import React, { useState } from 'react';
 import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Button,
   Box,
   Drawer,
   List,
@@ -11,32 +7,27 @@ import {
   ListItemIcon,
   ListItemText,
   ListItemButton,
-  IconButton,
-  Avatar,
-  Menu,
-  MenuItem,
   Chip,
   LinearProgress,
-  Divider,
+  Typography,
   useTheme,
   useMediaQuery,
+  Toolbar,
 } from '@mui/material';
 import {
-  Menu as MenuIcon,
   Home,
   Work,
   Assignment,
   EmojiEvents,
   Person,
   Dashboard,
-  Logout,
-  Login,
   TrendingUp,
   AdminPanelSettings,
   Psychology,
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import GamingAppBar from '../gaming/GamingAppBar';
 
 const drawerWidth = 280;
 
@@ -49,31 +40,12 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentUser, userProfile, logout, isAdmin } = useAuth();
+  const { currentUser, userProfile, isAdmin } = useAuth();
   
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
-  };
-
-  const handleProfileMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleProfileMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleLogout = async () => {
-    try {
-      await logout();
-      handleProfileMenuClose();
-      navigate('/');
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
   };
 
   const handleNavigation = (path: string) => {
@@ -267,97 +239,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <Box sx={{ display: 'flex' }}>
-      {/* App Bar */}
-      <AppBar
-        position="fixed"
-        sx={{
-          width: { md: `calc(100% - ${drawerWidth}px)` },
-          ml: { md: `${drawerWidth}px` },
-          zIndex: theme.zIndex.drawer + 1,
-        }}
-      >
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            edge="start"
-            onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { md: 'none' } }}
-          >
-            <MenuIcon />
-          </IconButton>
-
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-            {navigation.find(nav => nav.path === location.pathname)?.name || 'Pathfinder'}
-          </Typography>
-
-          {/* User Menu */}
-          {currentUser ? (
-            <Box>
-              <IconButton
-                size="large"
-                aria-label="account menu"
-                aria-controls="account-menu"
-                aria-haspopup="true"
-                onClick={handleProfileMenuOpen}
-                color="inherit"
-              >
-                <Avatar
-                  src={currentUser.photoURL || undefined}
-                  sx={{ width: 32, height: 32 }}
-                >
-                  {currentUser.displayName?.[0] || currentUser.email?.[0]?.toUpperCase()}
-                </Avatar>
-              </IconButton>
-              <Menu
-                id="account-menu"
-                anchorEl={anchorEl}
-                open={Boolean(anchorEl)}
-                onClose={handleProfileMenuClose}
-                onClick={handleProfileMenuClose}
-                transformOrigin={{ horizontal: 'right', vertical: 'top' }}
-                anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
-              >
-                <MenuItem onClick={() => handleNavigation('/profile')}>
-                  <ListItemIcon>
-                    <Person fontSize="small" />
-                  </ListItemIcon>
-                  Profile
-                </MenuItem>
-                <MenuItem onClick={() => handleNavigation('/dashboard')}>
-                  <ListItemIcon>
-                    <Dashboard fontSize="small" />
-                  </ListItemIcon>
-                  Dashboard
-                </MenuItem>
-                {isAdmin() && (
-                  <MenuItem onClick={() => handleNavigation('/admin')}>
-                    <ListItemIcon>
-                      <AdminPanelSettings fontSize="small" />
-                    </ListItemIcon>
-                    Admin
-                  </MenuItem>
-                )}
-                <Divider />
-                <MenuItem onClick={handleLogout}>
-                  <ListItemIcon>
-                    <Logout fontSize="small" />
-                  </ListItemIcon>
-                  Logout
-                </MenuItem>
-              </Menu>
-            </Box>
-          ) : (
-            <Button
-              color="inherit"
-              startIcon={<Login />}
-              onClick={() => handleNavigation('/auth')}
-            >
-              Sign In
-            </Button>
-          )}
-        </Toolbar>
-      </AppBar>
+      {/* Gaming App Bar */}
+      <GamingAppBar 
+        onDrawerToggle={handleDrawerToggle}
+        drawerWidth={drawerWidth}
+      />
 
       {/* Navigation Drawer */}
       <Box

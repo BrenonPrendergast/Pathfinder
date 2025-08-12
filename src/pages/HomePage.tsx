@@ -23,6 +23,10 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import GradientText from '../components/GradientText';
 import BackgroundShape from '../components/BackgroundShape';
+import GamingBackground from '../components/backgrounds/GamingBackground';
+import FloatingNodes from '../components/backgrounds/FloatingNodes';
+import DynamicGradients from '../components/backgrounds/DynamicGradients';
+import InteractiveSpotlight from '../components/backgrounds/InteractiveSpotlight';
 
 const HomePage: React.FC = () => {
   const navigate = useNavigate();
@@ -63,8 +67,14 @@ const HomePage: React.FC = () => {
   ];
 
   return (
-    <>
-      {/* Background Decorations */}
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Gaming Background Layers */}
+      <GamingBackground variant="combined" intensity="medium" />
+      <FloatingNodes nodeCount={20} connectionOpacity={0.12} />
+      <DynamicGradients variant="aurora" speed="medium" intensity="subtle" />
+      <InteractiveSpotlight size="large" intensity="medium" color="multi" />
+
+      {/* Legacy Background Shape for compatibility */}
       <BackgroundShape 
         variant="blur-gray"
         position={{ 
@@ -72,11 +82,11 @@ const HomePage: React.FC = () => {
           left: '50%',
           transform: 'translateX(-50%) translateY(-20%)',
         }}
-        opacity={0.8}
-        zIndex={-2}
+        opacity={0.3}
+        zIndex={-3}
       />
 
-      <Container maxWidth="lg" sx={{ position: 'relative' }}>
+      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 10 }}>
         {/* Hero Section */}
         <Box sx={{ textAlign: 'center', py: { xs: 8, md: 12 } }}>
           <GradientText
@@ -460,7 +470,7 @@ const HomePage: React.FC = () => {
           )}
         </Box>
       </Container>
-    </>
+    </div>
   );
 };
 
