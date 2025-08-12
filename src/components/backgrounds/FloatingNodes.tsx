@@ -43,6 +43,11 @@ export default function FloatingNodes({
     // Initialize nodes
     const initNodes = () => {
       nodesRef.current = [];
+      // Get CSS variable values and convert to actual HSL colors
+      const primaryColor = 'hsl(100, 82%, 45%)'; // neon-lime primary
+      const accentColor = 'hsl(160, 60%, 38%)';   // teal-green accent
+      const secondaryColor = 'hsl(217, 20%, 18%)'; // slate/graphite secondary
+      
       for (let i = 0; i < nodeCount; i++) {
         nodesRef.current.push({
           x: Math.random() * canvas.width,
@@ -50,8 +55,8 @@ export default function FloatingNodes({
           vx: (Math.random() - 0.5) * 0.5,
           vy: (Math.random() - 0.5) * 0.5,
           size: Math.random() * 3 + 2,
-          color: Math.random() > 0.7 ? 'hsl(var(--primary))' : 
-                 Math.random() > 0.5 ? 'hsl(var(--accent))' : 'hsl(var(--secondary))'
+          color: Math.random() > 0.7 ? primaryColor : 
+                 Math.random() > 0.5 ? accentColor : secondaryColor
         });
       }
     };
@@ -76,7 +81,6 @@ export default function FloatingNodes({
       });
 
       // Draw connections
-      ctx.strokeStyle = `hsla(var(--primary), ${connectionOpacity})`;
       ctx.lineWidth = 1;
       
       for (let i = 0; i < nodesRef.current.length; i++) {
@@ -91,7 +95,7 @@ export default function FloatingNodes({
           // Only draw connections between nearby nodes
           if (distance < 120) {
             const opacity = connectionOpacity * (1 - distance / 120);
-            ctx.strokeStyle = `hsla(var(--primary), ${opacity})`;
+            ctx.strokeStyle = `hsla(100, 82%, 45%, ${opacity})`;
             
             ctx.beginPath();
             ctx.moveTo(nodeA.x, nodeA.y);
@@ -103,13 +107,24 @@ export default function FloatingNodes({
 
       // Draw nodes
       nodesRef.current.forEach(node => {
+        // Convert HSL to HSLA for gradient
+        const getHSLAColor = (hslColor: string, alpha: number) => {
+          // Extract HSL values from "hsl(h, s%, l%)" format
+          const match = hslColor.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
+          if (match) {
+            const [, h, s, l] = match;
+            return `hsla(${h}, ${s}%, ${l}%, ${alpha})`;
+          }
+          return hslColor; // fallback
+        };
+
         // Node glow
         const gradient = ctx.createRadialGradient(
           node.x, node.y, 0,
           node.x, node.y, node.size * 3
         );
-        gradient.addColorStop(0, node.color.replace(')', ', 0.3)').replace('hsl', 'hsla'));
-        gradient.addColorStop(1, node.color.replace(')', ', 0)').replace('hsl', 'hsla'));
+        gradient.addColorStop(0, getHSLAColor(node.color, 0.3));
+        gradient.addColorStop(1, getHSLAColor(node.color, 0));
         
         ctx.fillStyle = gradient;
         ctx.beginPath();
@@ -117,7 +132,7 @@ export default function FloatingNodes({
         ctx.fill();
 
         // Node core
-        ctx.fillStyle = node.color.replace(')', ', 0.6)').replace('hsl', 'hsla');
+        ctx.fillStyle = getHSLAColor(node.color, 0.6);
         ctx.beginPath();
         ctx.arc(node.x, node.y, node.size, 0, Math.PI * 2);
         ctx.fill();
