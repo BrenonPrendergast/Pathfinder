@@ -99,6 +99,53 @@ The application uses 18 standardized career field categories based on industry c
 - **Skill Tracking**: Hours spent learning specific skills
 - **Achievement System**: Unlockable badges based on user activity
 
+## Design System & Consistency Standards
+
+### Visual Design Standards
+- **Color Scheme**: Consistent use of lime green (#00B162) for primary actions and purple (#6366f1) for interactive elements
+- **Button Styling**: All action buttons use lime green (#00B162) with hover state (#009654)
+- **Card Styling**: Semi-transparent backgrounds with `linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)`
+- **Border Colors**: Purple (#6366f1) for form inputs and interactive borders
+- **Background Effects**: Gaming-inspired particle systems, floating nodes, and interactive cursor effects on all main pages
+
+### Layout Standards
+- **Container Structure**: All pages use `Container maxWidth="lg"` with `position: 'relative', zIndex: 10`
+- **Background Layers**: Consistent background animation components across all pages:
+  - `<GamingBackground variant="combined" intensity="medium" />`
+  - `<FloatingNodes nodeCount={20} connectionOpacity={0.12} />`
+  - `<InteractiveSpotlight size="large" intensity="subtle" color="primary" />`
+- **Card Height Alignment**: Use flexbox for consistent card heights in grid layouts:
+  ```tsx
+  <Card sx={{ 
+    height: '100%',
+    display: 'flex',
+    flexDirection: 'column',
+  }}>
+    <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+  ```
+
+### Typography Standards
+- **Page Headers**: Use GradientText component with consistent gradient styling
+- **Section Titles**: Consistent spacing and hierarchy with Material-UI variants
+- **Font System**: Nacelle font family for headers, Inter for body text
+
+### Component Standards
+- **Navigation**: Layout component provides consistent navigation across all pages
+- **Forms**: Purple borders for inputs with consistent focus states
+- **Icons**: Material-UI icons with consistent color mapping (purple for interactive, lime green for actions)
+- **Progress Indicators**: Linear progress bars use lime green color (#00B162)
+
+### Animation Standards
+- **Hover Effects**: Cards have subtle purple glow on hover (hsl(250 86% 67% / 0.35))
+- **Button Animations**: Slight upward translate on hover with smooth transitions
+- **Page Transitions**: Consistent AOS (Animate On Scroll) effects with 600ms duration
+- **Particle Effects**: Subtle, non-distracting particle animations that enhance the gaming theme
+
+### Responsive Design
+- **Breakpoints**: Follow Material-UI standard breakpoints (xs, sm, md, lg, xl)
+- **Grid System**: Consistent use of Material-UI Grid with responsive spacing
+- **Typography**: Responsive font sizes using sx prop with xs/md breakpoint scaling
+
 ## Admin Setup
 
 To create the first admin user:
