@@ -21,6 +21,7 @@ import {
   Divider,
   Tabs,
   Tab,
+  Container,
 } from '@mui/material';
 import {
   Email,
@@ -40,6 +41,10 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import CharacterSheet from '../components/CharacterSheet';
 import { careerService } from '../services';
+import GradientText from '../components/GradientText';
+import GamingBackground from '../components/backgrounds/GamingBackground';
+import FloatingNodes from '../components/backgrounds/FloatingNodes';
+import InteractiveSpotlight from '../components/backgrounds/InteractiveSpotlight';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -116,9 +121,16 @@ const ProfilePage: React.FC = () => {
 
   if (!currentUser || !userProfile) {
     return (
-      <Box>
-        <Typography>Loading profile...</Typography>
-      </Box>
+      <div className="min-h-screen bg-background relative overflow-hidden">
+        <GamingBackground variant="combined" intensity="medium" />
+        <FloatingNodes nodeCount={20} connectionOpacity={0.12} />
+        <InteractiveSpotlight size="large" intensity="subtle" color="primary" />
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 10 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+            <Typography>Loading profile...</Typography>
+          </Box>
+        </Container>
+      </div>
     );
   }
 
@@ -167,14 +179,50 @@ const ProfilePage: React.FC = () => {
     .slice(0, 5);
 
   return (
-    <Box>
-      <Typography variant="h3" component="h1" gutterBottom>
-        Profile 👤
-      </Typography>
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Gaming Background Layers */}
+      <GamingBackground variant="combined" intensity="medium" />
+      <FloatingNodes nodeCount={20} connectionOpacity={0.12} />
+      <InteractiveSpotlight size="large" intensity="subtle" color="primary" />
 
-      {/* Tab Navigation */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs value={tabValue} onChange={handleTabChange}>
+      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 10 }}>
+        <Box sx={{ py: { xs: 4, md: 6 } }}>
+          {/* Header */}
+          <Box sx={{ textAlign: 'center', mb: 4 }}>
+            <GradientText
+              variant="h2"
+              component="h1"
+              animated={true}
+              sx={{ 
+                fontSize: { xs: '2.5rem', md: '3.5rem' },
+                mb: 2,
+              }}
+            >
+              Profile
+            </GradientText>
+          </Box>
+
+          {/* Tab Navigation */}
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+            <Tabs 
+              value={tabValue} 
+              onChange={handleTabChange}
+              sx={{
+                '& .MuiTab-root': {
+                  fontFamily: '"Nacelle", sans-serif',
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  fontSize: '0.9rem',
+                  color: 'text.secondary',
+                  '&.Mui-selected': {
+                    color: '#6366f1',
+                  },
+                },
+                '& .MuiTabs-indicator': {
+                  backgroundColor: '#6366f1',
+                },
+              }}
+            >
           <Tab 
             label="Character Sheet" 
             icon={<GamepadOutlined />} 
@@ -193,21 +241,21 @@ const ProfilePage: React.FC = () => {
             iconPosition="start"
             id="profile-tab-2" 
           />
-        </Tabs>
-      </Box>
+            </Tabs>
+          </Box>
 
-      {/* Character Sheet Tab */}
-      <TabPanel value={tabValue} index={0}>
+          {/* Character Sheet Tab */}
+          <TabPanel value={tabValue} index={0}>
         <CharacterSheet />
-      </TabPanel>
+          </TabPanel>
 
-      {/* Profile Details Tab */}
-      <TabPanel value={tabValue} index={1}>
+          {/* Profile Details Tab */}
+          <TabPanel value={tabValue} index={1}>
 
-      <Grid container spacing={4}>
-        {/* Profile Info */}
-        <Grid item xs={12} md={4}>
-          <Card>
+          <Grid container spacing={4}>
+            {/* Profile Info */}
+            <Grid item xs={12} md={4}>
+              <Card sx={{ background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)' }}>
             <CardContent sx={{ textAlign: 'center' }}>
               <Avatar
                 src={currentUser.photoURL || undefined}
@@ -240,18 +288,27 @@ const ProfilePage: React.FC = () => {
               </Box>
 
               <Button 
-                variant="outlined" 
+                variant="contained"
                 startIcon={<Edit />}
                 onClick={handleEditProfile}
                 fullWidth
+                sx={{
+                  backgroundColor: '#00B162',
+                  '&:hover': {
+                    backgroundColor: '#009654',
+                  },
+                }}
               >
                 Edit Profile
               </Button>
-            </CardContent>
-          </Card>
+              </CardContent>
+              </Card>
 
-          {/* Account Info */}
-          <Card sx={{ mt: 3 }}>
+              {/* Account Info */}
+              <Card sx={{ 
+                mt: 3,
+                background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)'
+              }}>
             <CardContent>
               <Typography variant="h6" gutterBottom>
                 Account Info
@@ -284,16 +341,19 @@ const ProfilePage: React.FC = () => {
                     secondary={userProfile.currentCareerPath || 'Not set'}
                   />
                 </ListItem>
-              </List>
-            </CardContent>
-          </Card>
-        </Grid>
+                </List>
+                </CardContent>
+              </Card>
+            </Grid>
 
-        {/* Stats and Progress */}
-        <Grid item xs={12} md={8}>
-          {/* Level Progress */}
-          <Card sx={{ mb: 3 }}>
-            <CardContent>
+            {/* Stats and Progress */}
+            <Grid item xs={12} md={8}>
+              {/* Level Progress */}
+              <Card sx={{ 
+                mb: 3,
+                background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)'
+              }}>
+                <CardContent>
               <Typography variant="h6" gutterBottom>
                 Level Progress
               </Typography>
@@ -314,56 +374,56 @@ const ProfilePage: React.FC = () => {
                 <Typography variant="caption" color="text.secondary" sx={{ mt: 1 }}>
                   {Math.max(0, xpProgress.required - xpProgress.current).toLocaleString()} XP to next level
                 </Typography>
-              </Box>
-            </CardContent>
-          </Card>
+                </Box>
+                </CardContent>
+              </Card>
 
-          {/* Stats Cards */}
-          <Grid container spacing={3} sx={{ mb: 3 }}>
-            <Grid item xs={12} sm={4}>
-              <Card>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <Assignment color="primary" sx={{ fontSize: 40, mb: 1 }} />
+              {/* Stats Cards */}
+              <Grid container spacing={3} sx={{ mb: 3 }}>
+                <Grid item xs={12} sm={4}>
+                  <Card sx={{ background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)' }}>
+                    <CardContent sx={{ textAlign: 'center' }}>
+                      <Assignment color="primary" sx={{ fontSize: 40, mb: 1 }} />
                   <Typography variant="h4" color="primary">
                     {userProfile.completedQuests.length}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Quests Completed
                   </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <Card>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <EmojiEvents color="secondary" sx={{ fontSize: 40, mb: 1 }} />
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <Card sx={{ background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)' }}>
+                    <CardContent sx={{ textAlign: 'center' }}>
+                      <EmojiEvents color="secondary" sx={{ fontSize: 40, mb: 1 }} />
                   <Typography variant="h4" color="secondary">
                     {userProfile.unlockedAchievements.length}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Achievements
                   </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <Card>
-                <CardContent sx={{ textAlign: 'center' }}>
-                  <TrendingUp color="success" sx={{ fontSize: 40, mb: 1 }} />
+                    </CardContent>
+                  </Card>
+                </Grid>
+                <Grid item xs={12} sm={4}>
+                  <Card sx={{ background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)' }}>
+                    <CardContent sx={{ textAlign: 'center' }}>
+                      <TrendingUp color="success" sx={{ fontSize: 40, mb: 1 }} />
                   <Typography variant="h4" color="success">
                     {userProfile.activeQuests.length}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Active Quests
                   </Typography>
-                </CardContent>
-              </Card>
-            </Grid>
-          </Grid>
+                    </CardContent>
+                  </Card>
+                </Grid>
+              </Grid>
 
-          {/* Top Skills */}
-          <Card>
-            <CardContent>
+              {/* Top Skills */}
+              <Card sx={{ background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)' }}>
+                <CardContent>
               <Typography variant="h6" gutterBottom>
                 Top Skills
               </Typography>
@@ -390,11 +450,11 @@ const ProfilePage: React.FC = () => {
                 <Typography color="text.secondary">
                   No skills tracked yet. Complete quests to start building your skill profile!
                 </Typography>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+                )}
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
 
       {/* Edit Profile Dialog */}
       <Dialog 
@@ -433,21 +493,27 @@ const ProfilePage: React.FC = () => {
             variant="contained"
             startIcon={<Save />}
             disabled={saving}
+            sx={{
+              backgroundColor: '#00B162',
+              '&:hover': {
+                backgroundColor: '#009654',
+              },
+            }}
           >
             {saving ? 'Saving...' : 'Save Changes'}
           </Button>
         </DialogActions>
-      </Dialog>
-      
-      </TabPanel> {/* Close Profile Details Tab */}
+          </Dialog>
+          
+          </TabPanel> {/* Close Profile Details Tab */}
 
-      {/* Career Paths Tab */}
-      <TabPanel value={tabValue} index={2}>
-        <Grid container spacing={3}>
-          {/* Active Career Paths */}
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
+          {/* Career Paths Tab */}
+          <TabPanel value={tabValue} index={2}>
+            <Grid container spacing={3}>
+              {/* Active Career Paths */}
+              <Grid item xs={12} md={6}>
+                <Card sx={{ background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)' }}>
+                  <CardContent>
                 <Typography variant="h6" gutterBottom>
                   Your Career Paths
                 </Typography>
@@ -484,7 +550,14 @@ const ProfilePage: React.FC = () => {
                         {!careerPath.isActive && (
                           <Button
                             size="small"
+                            variant="contained"
                             onClick={() => handleSetActiveCareer(careerPath.careerId)}
+                            sx={{
+                              backgroundColor: '#00B162',
+                              '&:hover': {
+                                backgroundColor: '#009654',
+                              },
+                            }}
                           >
                             Set Active
                           </Button>
@@ -492,15 +565,15 @@ const ProfilePage: React.FC = () => {
                       </ListItem>
                     ))}
                   </List>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
+                  )}
+                  </CardContent>
+                </Card>
+              </Grid>
 
-          {/* Available Careers */}
-          <Grid item xs={12} md={6}>
-            <Card>
-              <CardContent>
+              {/* Available Careers */}
+              <Grid item xs={12} md={6}>
+                <Card sx={{ background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)' }}>
+                  <CardContent>
                 <Typography variant="h6" gutterBottom>
                   Explore Careers
                 </Typography>
@@ -524,9 +597,16 @@ const ProfilePage: React.FC = () => {
                           />
                           <Button
                             size="small"
+                            variant="contained"
                             startIcon={<Add />}
                             disabled={isAlreadyAdded}
                             onClick={() => handleAddCareerPath(career.id, career.title)}
+                            sx={{
+                              backgroundColor: isAlreadyAdded ? 'grey.400' : '#00B162',
+                              '&:hover': {
+                                backgroundColor: isAlreadyAdded ? 'grey.400' : '#009654',
+                              },
+                            }}
                           >
                             {isAlreadyAdded ? 'Added' : 'Add Path'}
                           </Button>
@@ -534,14 +614,15 @@ const ProfilePage: React.FC = () => {
                       );
                     })}
                   </List>
-                )}
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
-      </TabPanel> {/* Close Career Paths Tab */}
-      
-    </Box>
+                  )}
+                  </CardContent>
+                </Card>
+              </Grid>
+            </Grid>
+          </TabPanel> {/* Close Career Paths Tab */}
+        </Box>
+      </Container>
+    </div>
   );
 };
 

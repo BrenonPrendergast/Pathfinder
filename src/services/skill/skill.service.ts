@@ -473,6 +473,331 @@ class SkillService {
     console.log('deleteHardSkill called:', skillId);
     // Placeholder - implement based on your needs
   }
+
+  // Get skills for constellation view by career path
+  async getSkillsByCareerPath(careerPath: string): Promise<any[]> {
+    try {
+      console.log(`Fetching skills for career path: ${careerPath}`);
+      
+      // Try to get saved constellation template from admin
+      const constellationRef = doc(db, 'skill-constellations', careerPath);
+      const constellationDoc = await getDoc(constellationRef);
+      
+      if (constellationDoc.exists()) {
+        const data = constellationDoc.data();
+        const skills = data.skills || [];
+        console.log(`Found admin template with ${skills.length} skills:`, skills);
+        return skills;
+      }
+      
+      console.log(`No admin template found for ${careerPath} - will show Coming Soon`);
+      // NO MOCK DATA - return empty array to trigger "Coming Soon" display
+      return [];
+    } catch (error) {
+      console.error('Error loading constellation template:', error);
+      // Return empty array on error to show "Coming Soon" rather than crash
+      return [];
+    }
+  }
+
+  // Save constellation skill data (admin only)
+  async saveSkillConstellation(careerPath: string, skillsData: any[]): Promise<void> {
+    try {
+      console.log(`Saving constellation for ${careerPath} with ${skillsData.length} skills`);
+      console.log('Skills data being saved:', skillsData);
+      
+      const constellationRef = doc(db, 'skill-constellations', careerPath);
+      const saveData = {
+        careerPath,
+        skills: skillsData,
+        lastUpdated: new Date(),
+        version: 1,
+      };
+      
+      console.log('Save data structure:', saveData);
+      await setDoc(constellationRef, saveData);
+      console.log(`Successfully saved constellation to Firestore: skill-constellations/${careerPath}`);
+    } catch (error) {
+      console.error('Error saving skill constellation:', error);
+      throw error;
+    }
+  }
+
+  // Import existing skills from Firestore for admin editing
+  async importExistingSkills(): Promise<any[]> {
+    try {
+      const skillMap = new Map<string, any>();
+      let totalFound = 0;
+      
+      console.log('Starting skill import from Firestore collections...');
+      
+      // Import from user-skills collection (user progress data)
+      try {
+        const userSkillsQuery = query(collection(db, this.COLLECTIONS.USER_SKILLS));
+        const userSkillsSnapshot = await getDocs(userSkillsQuery);
+        console.log(`Found ${userSkillsSnapshot.size} documents in user-skills collection`);
+        
+        userSkillsSnapshot.docs.forEach(doc => {
+          const data = doc.data();
+          if (data.skillId) {
+            totalFound++;
+            if (!skillMap.has(data.skillId)) {
+              skillMap.set(data.skillId, {
+                id: data.skillId,
+                name: this.formatSkillName(data.skillId),
+                description: `User skill: ${this.formatSkillName(data.skillId)}`,
+                level: Math.min(5, data.currentLevel || 1),
+                category: 'user-skills',
+                xpReward: 10,
+                prerequisites: [],
+                starType: 'main-sequence',
+                source: 'user-skills',
+                usageCount: 1,
+              });
+            } else {
+              skillMap.get(data.skillId)!.usageCount++;
+            }
+          }
+        });
+      } catch (error) {
+        console.warn('Error importing from user-skills:', error);
+      }
+
+      // Import from soft skills (predefined skills)
+      try {
+        const softSkills = await this.getAllSoftSkills();
+        console.log(`Found ${softSkills.length} predefined soft skills`);
+        
+        softSkills.forEach(skill => {
+          totalFound++;
+          if (!skillMap.has(skill.id)) {
+            skillMap.set(skill.id, {
+              id: skill.id,
+              name: skill.name,
+              description: skill.description || `Soft skill: ${skill.name}`,
+              level: skill.skillLevel === 'advanced' ? 4 : skill.skillLevel === 'intermediate' ? 3 : 2,
+              category: skill.category || 'soft-skills',
+              xpReward: 15,
+              prerequisites: skill.prerequisites || [],
+              starType: 'giant',
+              source: 'soft-skills',
+              usageCount: 0,
+            });
+          }
+        });
+      } catch (error) {
+        console.warn('Error importing soft skills:', error);
+      }
+
+      // Import from careers (hard skills)
+      try {
+        const careersQuery = query(collection(db, 'careers'));
+        const careersSnapshot = await getDocs(careersQuery);
+        console.log(`Found ${careersSnapshot.size} documents in careers collection`);
+        
+        careersSnapshot.docs.forEach(doc => {
+          const career = doc.data();
+          if (career.skills && Array.isArray(career.skills)) {
+            career.skills.forEach((skill: any) => {
+              totalFound++;
+              const skillId = `${skill.skillName.toLowerCase().replace(/\s+/g, '_')}`;
+              if (!skillMap.has(skillId)) {
+                skillMap.set(skillId, {
+                  id: skillId,
+                  name: skill.skillName,
+                  description: skill.description || `Professional skill: ${skill.skillName}`,
+                  level: skill.proficiencyLevel || 3,
+                  category: career.primaryField || 'technical',
+                  xpReward: (skill.proficiencyLevel || 3) * 5,
+                  prerequisites: [],
+                  starType: skill.proficiencyLevel >= 4 ? 'supergiant' : 'main-sequence',
+                  source: 'careers',
+                  careerTitle: career.title,
+                  usageCount: 0,
+                });
+              }
+            });
+          }
+        });
+      } catch (error) {
+        console.warn('Could not import career skills:', error);
+      }
+
+      const results = Array.from(skillMap.values()).sort((a, b) => b.usageCount - a.usageCount);
+      console.log(`Import complete: Found ${totalFound} total skill entries, ${results.length} unique skills`);
+      
+      // If no skills found, provide sample skills for testing
+      if (results.length === 0) {
+        console.log('No skills found in database, providing sample skills for testing');
+        return this.generateSampleSkills();
+      }
+      
+      return results;
+    } catch (error) {
+      console.error('Error importing existing skills:', error);
+      throw error;
+    }
+  }
+
+  // Helper method to format skill names from IDs
+  private formatSkillName(skillId: string): string {
+    return skillId
+      .split('_')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  }
+
+  // Get all available skill collections for import
+  async getSkillCollections(): Promise<{name: string, count: number, description: string}[]> {
+    try {
+      const collections = [];
+      
+      // Check user-skills collection
+      try {
+        const userSkillsQuery = query(collection(db, this.COLLECTIONS.USER_SKILLS));
+        const userSkillsSnapshot = await getDocs(userSkillsQuery);
+        collections.push({
+          name: 'User Skills Progress',
+          count: userSkillsSnapshot.size,
+          description: 'Skills from user progress tracking and gamification system'
+        });
+      } catch (error) {
+        console.warn('Cannot access user-skills collection:', error);
+        collections.push({
+          name: 'User Skills Progress',
+          count: 0,
+          description: 'Skills from user progress tracking (access denied)'
+        });
+      }
+
+      // Check careers collection
+      try {
+        const careersQuery = query(collection(db, 'careers'));
+        const careersSnapshot = await getDocs(careersQuery);
+        let skillCount = 0;
+        careersSnapshot.docs.forEach(doc => {
+          const career = doc.data();
+          if (career.skills && Array.isArray(career.skills)) {
+            skillCount += career.skills.length;
+          }
+        });
+        collections.push({
+          name: 'Career Skills',
+          count: skillCount,
+          description: `Professional skills from ${careersSnapshot.size} career definitions`
+        });
+      } catch (error) {
+        console.warn('Cannot access careers collection:', error);
+        collections.push({
+          name: 'Career Skills',
+          count: 0,
+          description: 'Professional skills from career definitions (access denied)'
+        });
+      }
+
+      // Add soft skills
+      try {
+        const softSkills = await this.getAllSoftSkills();
+        collections.push({
+          name: 'Soft Skills Library',
+          count: softSkills.length,
+          description: 'Predefined interpersonal and foundational skills'
+        });
+      } catch (error) {
+        console.warn('Cannot access soft skills:', error);
+        collections.push({
+          name: 'Soft Skills Library',
+          count: 0,
+          description: 'Predefined soft skills (error loading)'
+        });
+      }
+
+      return collections;
+    } catch (error) {
+      console.error('Error getting skill collections:', error);
+      return [];
+    }
+  }
+
+
+
+  // Generate sample skills for testing when no data is available
+  private generateSampleSkills(): any[] {
+    return [
+      {
+        id: 'communication',
+        name: 'Communication',
+        description: 'Effective verbal and written communication skills',
+        level: 1,
+        category: 'soft-skills',
+        xpReward: 15,
+        prerequisites: [],
+        starType: 'main-sequence',
+        source: 'sample',
+        usageCount: 10,
+      },
+      {
+        id: 'problem_solving',
+        name: 'Problem Solving',
+        description: 'Analytical thinking and creative problem resolution',
+        level: 2,
+        category: 'soft-skills',
+        xpReward: 20,
+        prerequisites: [],
+        starType: 'main-sequence',
+        source: 'sample',
+        usageCount: 8,
+      },
+      {
+        id: 'javascript',
+        name: 'JavaScript',
+        description: 'Modern JavaScript programming language',
+        level: 3,
+        category: 'technical',
+        xpReward: 25,
+        prerequisites: ['problem_solving'],
+        starType: 'giant',
+        source: 'sample',
+        usageCount: 5,
+      },
+      {
+        id: 'react',
+        name: 'React',
+        description: 'React framework for building user interfaces',
+        level: 4,
+        category: 'technical',
+        xpReward: 30,
+        prerequisites: ['javascript'],
+        starType: 'giant',
+        source: 'sample',
+        usageCount: 3,
+      },
+      {
+        id: 'leadership',
+        name: 'Leadership',
+        description: 'Team leadership and management skills',
+        level: 4,
+        category: 'soft-skills',
+        xpReward: 35,
+        prerequisites: ['communication'],
+        starType: 'supergiant',
+        source: 'sample',
+        usageCount: 2,
+      },
+      {
+        id: 'project_management',
+        name: 'Project Management',
+        description: 'Planning, organizing, and managing projects',
+        level: 3,
+        category: 'management',
+        xpReward: 25,
+        prerequisites: ['communication', 'problem_solving'],
+        starType: 'giant',
+        source: 'sample',
+        usageCount: 4,
+      }
+    ];
+  }
 }
 
 export const skillService = new SkillService();

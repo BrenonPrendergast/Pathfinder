@@ -63,6 +63,7 @@ firebase deploy --only firestore:rules
 - `achievements` - Unlockable badges and milestones
 - `user-quests` - User progress tracking
 - `user-achievements` - User achievement unlocks
+- `skill-constellations` - Admin-created constellation templates for career paths
 
 ### Key Components
 - **AuthContext** (`src/contexts/AuthContext.tsx`): User authentication and profile management

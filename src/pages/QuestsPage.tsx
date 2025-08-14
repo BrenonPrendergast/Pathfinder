@@ -14,6 +14,7 @@ import {
   InputLabel,
   CircularProgress,
   Alert,
+  Container,
 } from '@mui/material';
 import {
   Assignment,
@@ -26,6 +27,10 @@ import {
 } from '@mui/icons-material';
 import { questService, Quest } from '../services';
 import { useAuth } from '../contexts/AuthContext';
+import GradientText from '../components/GradientText';
+import GamingBackground from '../components/backgrounds/GamingBackground';
+import FloatingNodes from '../components/backgrounds/FloatingNodes';
+import InteractiveSpotlight from '../components/backgrounds/InteractiveSpotlight';
 
 const QuestsPage: React.FC = () => {
   const { currentUser, userProfile, completeQuest } = useAuth();
@@ -77,12 +82,16 @@ const QuestsPage: React.FC = () => {
     }
   };
 
-  const getDifficultyColor = (difficulty: string) => {
+  const getDifficultyChipProps = (difficulty: string) => {
     switch (difficulty) {
-      case 'beginner': return 'success';
-      case 'intermediate': return 'warning';
-      case 'advanced': return 'error';
-      default: return 'default';
+      case 'beginner': 
+        return { sx: { backgroundColor: '#00B162', color: 'white' } };
+      case 'intermediate': 
+        return { color: 'warning' as const };
+      case 'advanced': 
+        return { color: 'error' as const };
+      default: 
+        return { color: 'default' as const };
     }
   };
 
@@ -106,92 +115,140 @@ const QuestsPage: React.FC = () => {
   };
 
   return (
-    <Box>
-      <Typography variant="h3" component="h1" gutterBottom>
-        Learning Quests 🎯
-      </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-        Complete quests to earn XP, build skills, and advance your career journey. 
-        Choose from courses, projects, assessments, and certifications.
-      </Typography>
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Gaming Background Layers */}
+      <GamingBackground variant="combined" intensity="medium" />
+      <FloatingNodes nodeCount={20} connectionOpacity={0.12} />
+      <InteractiveSpotlight size="large" intensity="subtle" color="primary" />
 
-      {/* Filters */}
-      <Grid container spacing={2} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <FormControl fullWidth>
-            <InputLabel>Difficulty</InputLabel>
-            <Select
-              value={difficultyFilter}
-              label="Difficulty"
-              onChange={(e) => setDifficultyFilter(e.target.value)}
+      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 10 }}>
+        <Box sx={{ py: { xs: 4, md: 6 } }}>
+          <Box sx={{ textAlign: 'center', mb: 4 }}>
+            <GradientText
+              variant="h2"
+              component="h1"
+              animated={true}
+              sx={{ 
+                fontSize: { xs: '2.5rem', md: '3.5rem' },
+                mb: 2,
+              }}
             >
-              <MenuItem value="">All Levels</MenuItem>
-              <MenuItem value="beginner">Beginner</MenuItem>
-              <MenuItem value="intermediate">Intermediate</MenuItem>
-              <MenuItem value="advanced">Advanced</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-        <Grid item xs={12} sm={6} md={3}>
-          <FormControl fullWidth>
-            <InputLabel>Type</InputLabel>
-            <Select
-              value={typeFilter}
-              label="Type"
-              onChange={(e) => setTypeFilter(e.target.value)}
+              Learning Quests
+            </GradientText>
+            <Typography
+              variant="h6"
+              color="text.secondary"
+              sx={{ 
+                mb: 4, 
+                maxWidth: '800px', 
+                mx: 'auto', 
+                lineHeight: 1.6,
+                fontSize: { xs: '1.125rem', md: '1.25rem' },
+              }}
             >
-              <MenuItem value="">All Types</MenuItem>
-              <MenuItem value="course">Courses</MenuItem>
-              <MenuItem value="practice">Practice</MenuItem>
-              <MenuItem value="project">Projects</MenuItem>
-              <MenuItem value="assessment">Assessments</MenuItem>
-              <MenuItem value="certification">Certifications</MenuItem>
-            </Select>
-          </FormControl>
-        </Grid>
-      </Grid>
+              Complete quests to earn XP, build skills, and advance your career journey. 
+              Choose from courses, projects, assessments, and certifications.
+            </Typography>
+          </Box>
 
-      {/* Error Alert */}
-      {error && (
-        <Alert severity="error" sx={{ mb: 4 }}>
-          {error}
-        </Alert>
-      )}
-
-      {/* Loading */}
-      {loading && (
-        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-          <CircularProgress />
-        </Box>
-      )}
-
-      {/* No Quests */}
-      {!loading && quests.length === 0 && !error && (
-        <Alert severity="info" sx={{ mb: 4 }}>
-          No quests available with the current filters. Try adjusting your search criteria.
-        </Alert>
-      )}
-
-      {/* Quests Grid */}
-      <Grid container spacing={3}>
-        {quests.map((quest) => {
-          const completed = isQuestCompleted(quest.id);
-          const active = isQuestActive(quest.id);
-
-          return (
-            <Grid item xs={12} md={6} lg={4} key={quest.id}>
-              <Card 
-                sx={{ 
-                  height: '100%', 
-                  display: 'flex', 
-                  flexDirection: 'column',
-                  opacity: completed ? 0.7 : 1,
-                  transition: 'transform 0.2s ease-in-out',
-                  '&:hover': {
-                    transform: completed ? 'none' : 'translateY(-4px)',
+          {/* Filters */}
+          <Grid container spacing={2} sx={{ mb: 4 }}>
+            <Grid item xs={12} sm={6} md={3}>
+              <FormControl fullWidth sx={{
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: 'rgba(99, 102, 241, 0.23)',
                   },
-                }}
-              >
+                  '&:hover fieldset': {
+                    borderColor: 'rgba(99, 102, 241, 0.5)',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#6366f1',
+                  },
+                },
+              }}>
+                <InputLabel>Difficulty</InputLabel>
+                <Select
+                  value={difficultyFilter}
+                  label="Difficulty"
+                  onChange={(e) => setDifficultyFilter(e.target.value)}
+                >
+                  <MenuItem value="">All Levels</MenuItem>
+                  <MenuItem value="beginner">Beginner</MenuItem>
+                  <MenuItem value="intermediate">Intermediate</MenuItem>
+                  <MenuItem value="advanced">Advanced</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <FormControl fullWidth sx={{
+                '& .MuiOutlinedInput-root': {
+                  '& fieldset': {
+                    borderColor: 'rgba(99, 102, 241, 0.23)',
+                  },
+                  '&:hover fieldset': {
+                    borderColor: 'rgba(99, 102, 241, 0.5)',
+                  },
+                  '&.Mui-focused fieldset': {
+                    borderColor: '#6366f1',
+                  },
+                },
+              }}>
+                <InputLabel>Type</InputLabel>
+                <Select
+                  value={typeFilter}
+                  label="Type"
+                  onChange={(e) => setTypeFilter(e.target.value)}
+                >
+                  <MenuItem value="">All Types</MenuItem>
+                  <MenuItem value="course">Courses</MenuItem>
+                  <MenuItem value="practice">Practice</MenuItem>
+                  <MenuItem value="project">Projects</MenuItem>
+                  <MenuItem value="assessment">Assessments</MenuItem>
+                  <MenuItem value="certification">Certifications</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+          </Grid>
+
+          {/* Error Alert */}
+          {error && (
+            <Alert severity="error" sx={{ mb: 4 }}>
+              {error}
+            </Alert>
+          )}
+
+          {/* Loading */}
+          {loading && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress />
+            </Box>
+          )}
+
+          {/* No Quests */}
+          {!loading && quests.length === 0 && !error && (
+            <Alert severity="info" sx={{ mb: 4 }}>
+              No quests available with the current filters. Try adjusting your search criteria.
+            </Alert>
+          )}
+
+          {/* Quests Grid */}
+          <Grid container spacing={3}>
+            {quests.map((quest) => {
+              const completed = isQuestCompleted(quest.id);
+              const active = isQuestActive(quest.id);
+
+              return (
+                <Grid item xs={12} md={6} lg={4} key={quest.id}>
+                  <Card 
+                    sx={{ 
+                      height: '100%', 
+                      display: 'flex', 
+                      flexDirection: 'column',
+                      background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)',
+                      opacity: completed ? 0.7 : 1,
+                    }}
+                  >
                 <CardContent sx={{ flexGrow: 1 }}>
                   <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 1, mb: 2 }}>
                     {getTypeIcon(quest.type || 'general')}
@@ -214,13 +271,13 @@ const QuestsPage: React.FC = () => {
                     />
                     <Chip 
                       label={quest.difficulty} 
-                      color={getDifficultyColor(quest.difficulty) as any}
-                      size="small" 
+                      size="small"
+                      {...getDifficultyChipProps(quest.difficulty)}
                     />
                     <Chip 
                       label={`${quest.xpReward} XP`} 
-                      color="primary"
-                      size="small" 
+                      size="small"
+                      sx={{ backgroundColor: '#6366f1', color: 'white' }}
                     />
                   </Box>
 
@@ -293,6 +350,12 @@ const QuestsPage: React.FC = () => {
                         size="small" 
                         variant="contained"
                         onClick={() => handleCompleteQuest(quest)}
+                        sx={{
+                          backgroundColor: '#00B162',
+                          '&:hover': {
+                            backgroundColor: '#009654',
+                          },
+                        }}
                       >
                         Mark Complete
                       </Button>
@@ -301,6 +364,15 @@ const QuestsPage: React.FC = () => {
                           size="small" 
                           endIcon={<OpenInNew />}
                           onClick={() => window.open(quest.externalUrl, '_blank')}
+                          sx={{
+                            borderColor: '#6366f1',
+                            color: '#6366f1',
+                            '&:hover': {
+                              backgroundColor: 'rgba(99, 102, 241, 0.08)',
+                              borderColor: '#6366f1',
+                            },
+                          }}
+                          variant="outlined"
                         >
                           Continue
                         </Button>
@@ -314,6 +386,12 @@ const QuestsPage: React.FC = () => {
                         startIcon={<PlayArrow />}
                         onClick={() => handleStartQuest(quest.id)}
                         disabled={!currentUser}
+                        sx={{
+                          backgroundColor: '#00B162',
+                          '&:hover': {
+                            backgroundColor: '#009654',
+                          },
+                        }}
                       >
                         {currentUser ? 'Start Quest' : 'Sign In to Start'}
                       </Button>
@@ -322,6 +400,15 @@ const QuestsPage: React.FC = () => {
                           size="small" 
                           endIcon={<OpenInNew />}
                           onClick={() => window.open(quest.externalUrl, '_blank')}
+                          sx={{
+                            borderColor: '#6366f1',
+                            color: '#6366f1',
+                            '&:hover': {
+                              backgroundColor: 'rgba(99, 102, 241, 0.08)',
+                              borderColor: '#6366f1',
+                            },
+                          }}
+                          variant="outlined"
                         >
                           Preview
                         </Button>
@@ -332,9 +419,11 @@ const QuestsPage: React.FC = () => {
               </Card>
             </Grid>
           );
-        })}
-      </Grid>
-    </Box>
+          })}
+          </Grid>
+        </Box>
+      </Container>
+    </div>
   );
 };
 

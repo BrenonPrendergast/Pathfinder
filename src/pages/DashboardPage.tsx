@@ -13,8 +13,7 @@ import {
   ListItemText,
   ListItemIcon,
   CircularProgress,
-  Switch,
-  FormControlLabel,
+  Container,
 } from '@mui/material';
 import {
   Assignment,
@@ -29,18 +28,27 @@ import {
   School,
   Lightbulb,
   Schedule,
+  Today,
+  Insights,
+  LocalFireDepartment,
+  Psychology,
+  MenuBook,
+  AccessTime,
+  Dashboard,
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { questRecommendationService, QuestRecommendation } from '../services';
-import LootyDashboard from '../components/LootyDashboard';
+import GradientText from '../components/GradientText';
+import GamingBackground from '../components/backgrounds/GamingBackground';
+import FloatingNodes from '../components/backgrounds/FloatingNodes';
+import InteractiveSpotlight from '../components/backgrounds/InteractiveSpotlight';
 
 const DashboardPage: React.FC = () => {
   const { userProfile } = useAuth();
   const navigate = useNavigate();
   const [quickRecommendations, setQuickRecommendations] = useState<QuestRecommendation[]>([]);
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
-  const [lootyMode, setLootyMode] = useState(true); // Default to new design
 
   useEffect(() => {
     if (userProfile) {
@@ -100,120 +108,364 @@ const DashboardPage: React.FC = () => {
     ? userProfile.careerPaths.reduce((sum, path) => sum + path.progressPercentage, 0) / userProfile.careerPaths.length
     : 0;
 
-  // Looty mode toggle
-  if (lootyMode) {
-    return (
-      <>
-        <Box sx={{ mb: 2, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={lootyMode}
-                onChange={(e) => setLootyMode(e.target.checked)}
-                color="primary"
-              />
-            }
-            label="Looty Design"
-          />
-        </Box>
-        <LootyDashboard />
-      </>
-    );
-  }
 
   return (
-    <Box>
-      {/* Design Toggle */}
-      <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Typography variant="h3" component="h1">
-          Welcome back, {userProfile.displayName || 'Pathfinder'}! 🎮
-        </Typography>
-        <FormControlLabel
-          control={
-            <Switch
-              checked={lootyMode}
-              onChange={(e) => setLootyMode(e.target.checked)}
-              color="primary"
-            />
-          }
-          label="Looty Design"
-        />
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Gaming Background Layers */}
+      <GamingBackground variant="combined" intensity="medium" />
+      <FloatingNodes nodeCount={20} connectionOpacity={0.12} />
+      <InteractiveSpotlight size="large" intensity="subtle" color="primary" />
+
+      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 10 }}>
+        <Box sx={{ py: { xs: 4, md: 6 } }}>
+      <Box sx={{ mb: 4 }}>
+        <Box sx={{ textAlign: 'left', mb: 4 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <Dashboard sx={{ fontSize: { xs: 32, md: 40 }, color: '#00B162' }} />
+            <Box>
+              <Typography
+                variant="h2"
+                component="h1"
+                sx={{ 
+                  fontSize: { xs: '2.5rem', md: '3.5rem' },
+                  background: 'linear-gradient(to right, #6366f1, #c7d2fe)',
+                  backgroundClip: 'text',
+                  WebkitBackgroundClip: 'text',
+                  color: 'transparent',
+                  display: 'inline',
+                }}
+              >
+                Welcome back, 
+              </Typography>
+              <Typography
+                variant="h2"
+                component="span"
+                sx={{ 
+                  fontSize: { xs: '2.5rem', md: '3.5rem' },
+                  color: '#00B162',
+                  ml: 1,
+                  fontWeight: 600,
+                }}
+              >
+                {userProfile.displayName || 'Pathfinder'}!
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
       </Box>
       
       <Grid container spacing={3}>
-        {/* Level Progress */}
-        <Grid item xs={12} md={8}>
-          <Card>
+        {/* === OVERVIEW SECTION === */}
+        {/* Welcome Stats Overview */}
+        <Grid item xs={12}>
+          <Card sx={{ 
+            background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)',
+          }}>
             <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h5" sx={{ mr: 2 }}>
-                  Level {userProfile.level}
-                </Typography>
-                <Chip 
-                  label={`${userProfile.totalXP.toLocaleString()} XP`} 
-                  color="primary" 
-                />
-              </Box>
-              <Typography variant="body2" color="text.secondary" gutterBottom>
-                Progress to Level {userProfile.level + 1}
-              </Typography>
-              <LinearProgress 
-                variant="determinate" 
-                value={xpProgress.percentage} 
-                sx={{ mb: 1, height: 8, borderRadius: 4 }}
-              />
-              <Typography variant="caption" color="text.secondary">
-                {Math.max(0, xpProgress.required - xpProgress.current).toLocaleString()} XP to next level
-              </Typography>
+              <Grid container spacing={3}>
+                {/* Level Progress */}
+                <Grid item xs={12} md={6}>
+                  <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                    <LocalFireDepartment sx={{ mr: 1, color: '#00B162' }} />
+                    <Typography variant="h5" sx={{ mr: 2 }}>
+                      Level {userProfile.level}
+                    </Typography>
+                    <Chip 
+                      label={`${userProfile.totalXP.toLocaleString()} XP`} 
+                      sx={{ backgroundColor: '#00B162', color: 'white' }}
+                    />
+                  </Box>
+                  <Typography variant="body2" color="text.secondary" gutterBottom>
+                    Progress to Level {userProfile.level + 1}
+                  </Typography>
+                  <LinearProgress 
+                    variant="determinate" 
+                    value={xpProgress.percentage} 
+                    sx={{ 
+                      mb: 1, 
+                      height: 8, 
+                      borderRadius: 4,
+                      '& .MuiLinearProgress-bar': {
+                        backgroundColor: '#00B162',
+                      }
+                    }}
+                  />
+                  <Typography variant="caption" color="text.secondary">
+                    {Math.max(0, xpProgress.required - xpProgress.current).toLocaleString()} XP to next level
+                  </Typography>
+                </Grid>
+                
+                {/* Quick Stats Grid */}
+                <Grid item xs={12} md={6}>
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
+                      <Box sx={{ textAlign: 'center', p: 1 }}>
+                        <Assignment sx={{ fontSize: 32, color: '#6366f1', mb: 1 }} />
+                        <Typography variant="h6" color="primary">
+                          {userProfile.completedQuests.length}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Quests Done
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Box sx={{ textAlign: 'center', p: 1 }}>
+                        <EmojiEvents sx={{ fontSize: 32, color: '#f59e0b', mb: 1 }} />
+                        <Typography variant="h6" color="warning.main">
+                          {userProfile.unlockedAchievements.length}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Achievements
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Box sx={{ textAlign: 'center', p: 1 }}>
+                        <TrendingUp sx={{ fontSize: 32, color: '#00B162', mb: 1 }} />
+                        <Typography variant="h6" sx={{ color: '#00B162' }}>
+                          {userProfile.careerPaths.length}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Career Paths
+                        </Typography>
+                      </Box>
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Box sx={{ textAlign: 'center', p: 1 }}>
+                        <Speed sx={{ fontSize: 32, color: '#8b5cf6', mb: 1 }} />
+                        <Typography variant="h6" color="secondary">
+                          {Object.keys(userProfile.skillHours).length}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          Skills Tracked
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  </Grid>
+                </Grid>
+              </Grid>
             </CardContent>
           </Card>
         </Grid>
 
-        {/* Quick Stats */}
+        {/* Today's Focus */}
         <Grid item xs={12} md={4}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Quick Stats
-              </Typography>
+          <Card sx={{ 
+            background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+          }}>
+            <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Today sx={{ mr: 1, color: '#6366f1' }} />
+                <GradientText variant="h6" component="h3">
+                  Today's Focus
+                </GradientText>
+              </Box>
               <List dense>
-                <ListItem>
-                  <ListItemIcon>
-                    <Assignment color="primary" />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary={`${userProfile.completedQuests.length} Quests Completed`}
-                  />
-                </ListItem>
-                <ListItem>
-                  <ListItemIcon>
-                    <EmojiEvents color="secondary" />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary={`${userProfile.unlockedAchievements.length} Achievements`}
-                  />
-                </ListItem>
-                <ListItem>
-                  <ListItemIcon>
-                    <TrendingUp color="success" />
-                  </ListItemIcon>
-                  <ListItemText 
-                    primary={userProfile.currentCareerPath ? 'Career Path Set' : 'No Career Path'}
-                    secondary={userProfile.currentCareerPath || 'Choose a career path to get started'}
-                  />
-                </ListItem>
+                {userProfile.activeQuests.length > 0 ? (
+                  <>
+                    <ListItem sx={{ px: 0 }}>
+                      <ListItemIcon>
+                        <PlayArrow color="primary" />
+                      </ListItemIcon>
+                      <ListItemText 
+                        primary="Continue Active Quests"
+                        secondary={`${userProfile.activeQuests.length} in progress`}
+                      />
+                    </ListItem>
+                    <ListItem sx={{ px: 0 }}>
+                      <ListItemIcon>
+                        <AccessTime color="action" />
+                      </ListItemIcon>
+                      <ListItemText 
+                        primary="Recommended Study Time"
+                        secondary="30-60 minutes"
+                      />
+                    </ListItem>
+                  </>
+                ) : (
+                  <ListItem sx={{ px: 0 }}>
+                    <ListItemIcon>
+                      <Lightbulb color="warning" />
+                    </ListItemIcon>
+                    <ListItemText 
+                      primary="Start Your First Quest"
+                      secondary="Begin your learning journey"
+                    />
+                  </ListItem>
+                )}
+              </List>
+              <Button 
+                variant="contained"
+                size="small"
+                fullWidth
+                startIcon={<Assignment />}
+                onClick={() => navigate('/quests')}
+                sx={{
+                  mt: 2,
+                  backgroundColor: '#00B162',
+                  '&:hover': {
+                    backgroundColor: '#009654',
+                  },
+                }}
+              >
+                Browse Quests
+              </Button>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Recent Activity */}
+        <Grid item xs={12} md={4}>
+          <Card sx={{ 
+            background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+          }}>
+            <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <Insights sx={{ mr: 1, color: '#8b5cf6' }} />
+                <GradientText variant="h6" component="h3">
+                  Recent Activity
+                </GradientText>
+              </Box>
+              <List dense>
+                {userProfile.unlockedAchievements.length > 0 ? (
+                  <ListItem sx={{ px: 0 }}>
+                    <ListItemIcon>
+                      <EmojiEvents color="secondary" />
+                    </ListItemIcon>
+                    <ListItemText 
+                      primary="Achievement Unlocked"
+                      secondary="Latest accomplishment"
+                    />
+                  </ListItem>
+                ) : null}
+                {userProfile.completedQuests.length > 0 ? (
+                  <ListItem sx={{ px: 0 }}>
+                    <ListItemIcon>
+                      <CheckCircle sx={{ color: '#00B162' }} />
+                    </ListItemIcon>
+                    <ListItemText 
+                      primary="Quest Completed"
+                      secondary="Keep up the momentum!"
+                    />
+                  </ListItem>
+                ) : (
+                  <ListItem sx={{ px: 0 }}>
+                    <ListItemIcon>
+                      <Star color="action" />
+                    </ListItemIcon>
+                    <ListItemText 
+                      primary="Welcome to Pathfinder!"
+                      secondary="Your journey begins now"
+                    />
+                  </ListItem>
+                )}
+                {topSkills.length > 0 && (
+                  <ListItem sx={{ px: 0 }}>
+                    <ListItemIcon>
+                      <TrendingUp sx={{ color: '#00B162' }} />
+                    </ListItemIcon>
+                    <ListItemText 
+                      primary={`${topSkills[0][0].split('_').join(' ')} Skill`}
+                      secondary={`${topSkills[0][1]} hours practiced`}
+                    />
+                  </ListItem>
+                )}
               </List>
             </CardContent>
           </Card>
         </Grid>
 
+        {/* Quick Actions */}
+        <Grid item xs={12} md={4}>
+          <Card sx={{ 
+            background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+          }}>
+            <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
+                <MenuBook sx={{ mr: 1, color: '#00B162' }} />
+                <GradientText variant="h6" component="h3">
+                  Quick Actions
+                </GradientText>
+              </Box>
+              <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                <Button 
+                  variant="outlined"
+                  size="small"
+                  startIcon={<Work />}
+                  onClick={() => navigate('/careers')}
+                  sx={{
+                    borderColor: '#6366f1',
+                    color: '#6366f1',
+                    '&:hover': {
+                      backgroundColor: 'rgba(99, 102, 241, 0.08)',
+                      borderColor: '#6366f1',
+                    },
+                  }}
+                >
+                  Explore Careers
+                </Button>
+                <Button 
+                  variant="outlined"
+                  size="small"
+                  startIcon={<Timeline />}
+                  onClick={() => navigate('/skill-tree')}
+                  sx={{
+                    borderColor: '#6366f1',
+                    color: '#6366f1',
+                    '&:hover': {
+                      backgroundColor: 'rgba(99, 102, 241, 0.08)',
+                      borderColor: '#6366f1',
+                    },
+                  }}
+                >
+                  View Skills
+                </Button>
+                <Button 
+                  variant="outlined"
+                  size="small"
+                  startIcon={<EmojiEvents />}
+                  onClick={() => navigate('/achievements')}
+                  sx={{
+                    borderColor: '#6366f1',
+                    color: '#6366f1',
+                    '&:hover': {
+                      backgroundColor: 'rgba(99, 102, 241, 0.08)',
+                      borderColor: '#6366f1',
+                    },
+                  }}
+                >
+                  Achievements
+                </Button>
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* === PROGRESS SECTION === */}
+
         {/* Career Progress Overview */}
         <Grid item xs={12}>
-          <Card>
+          <Card sx={{ 
+            background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)',
+          }}>
             <CardContent>
-              <Typography variant="h6" gutterBottom>
+              <GradientText
+                variant="h5"
+                component="h2"
+                sx={{ mb: 2 }}
+              >
                 🎯 Career Progress Overview
-              </Typography>
+              </GradientText>
               
               {userProfile.careerPaths.length === 0 ? (
                 <Box sx={{ textAlign: 'center', py: 4 }}>
@@ -228,6 +480,12 @@ const DashboardPage: React.FC = () => {
                     variant="contained" 
                     startIcon={<Work />}
                     onClick={() => navigate('/profile')}
+                    sx={{
+                      backgroundColor: '#00B162',
+                      '&:hover': {
+                        backgroundColor: '#009654',
+                      },
+                    }}
                   >
                     Select Career Paths
                   </Button>
@@ -313,11 +571,20 @@ const DashboardPage: React.FC = () => {
 
         {/* Skills Development */}
         <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
+          <Card sx={{ 
+            background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+          }}>
+            <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+              <GradientText
+                variant="h6"
+                component="h3"
+                sx={{ mb: 2 }}
+              >
                 📈 Skill Development
-              </Typography>
+              </GradientText>
               
               {topSkills.length === 0 ? (
                 <Box sx={{ textAlign: 'center', py: 4 }}>
@@ -396,11 +663,20 @@ const DashboardPage: React.FC = () => {
 
         {/* Active Quests */}
         <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
+          <Card sx={{ 
+            background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)',
+            height: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+          }}>
+            <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+              <GradientText
+                variant="h6"
+                component="h3"
+                sx={{ mb: 2 }}
+              >
                 Active Quests
-              </Typography>
+              </GradientText>
               {userProfile.activeQuests.length > 0 ? (
                 <List>
                   {userProfile.activeQuests.slice(0, 3).map((questId, index) => (
@@ -423,6 +699,12 @@ const DashboardPage: React.FC = () => {
                   <Button 
                     variant="contained" 
                     onClick={() => navigate('/quests')}
+                    sx={{
+                      backgroundColor: '#00B162',
+                      '&:hover': {
+                        backgroundColor: '#009654',
+                      },
+                    }}
                   >
                     Browse Quests
                   </Button>
@@ -432,318 +714,13 @@ const DashboardPage: React.FC = () => {
           </Card>
         </Grid>
 
-        {/* Recent Achievements */}
-        <Grid item xs={12} md={6}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Recent Achievements
-              </Typography>
-              {userProfile.unlockedAchievements.length > 0 ? (
-                <List>
-                  {userProfile.unlockedAchievements.slice(-3).map((achievementId, index) => (
-                    <ListItem key={achievementId}>
-                      <ListItemIcon>
-                        <EmojiEvents color="secondary" />
-                      </ListItemIcon>
-                      <ListItemText 
-                        primary={`Achievement ${index + 1}`}
-                        secondary="Recently unlocked"
-                      />
-                    </ListItem>
-                  ))}
-                </List>
-              ) : (
-                <Box sx={{ textAlign: 'center', py: 4 }}>
-                  <Typography color="text.secondary" gutterBottom>
-                    No achievements yet
-                  </Typography>
-                  <Button 
-                    variant="outlined" 
-                    onClick={() => navigate('/achievements')}
-                  >
-                    View All Achievements
-                  </Button>
-                </Box>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
 
-        {/* Personalized Recommendations */}
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                💡 Recommendations for You
-              </Typography>
-              
-              <Grid container spacing={2}>
-                {activeCareerPath && (
-                  <Grid item xs={12} md={4}>
-                    <Card variant="outlined" sx={{ height: '100%' }}>
-                      <CardContent>
-                        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                          <CheckCircle color="success" sx={{ mr: 1 }} />
-                          <Typography variant="subtitle2">
-                            Next Milestone
-                          </Typography>
-                        </Box>
-                        <Typography variant="body2" color="text.secondary" gutterBottom>
-                          Based on your {activeCareerPath.careerTitle} progress
-                        </Typography>
-                        <Typography variant="body2">
-                          Focus on completing {activeCareerPath.skillsTotal - activeCareerPath.skillsCompleted} more skills to reach {Math.min(activeCareerPath.progressPercentage + 20, 100)}% completion.
-                        </Typography>
-                        <Button 
-                          size="small" 
-                          variant="outlined" 
-                          sx={{ mt: 2 }}
-                          onClick={() => navigate('/skill-tree')}
-                        >
-                          View Skills
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                )}
-                
-                <Grid item xs={12} md={4}>
-                  <Card variant="outlined" sx={{ height: '100%' }}>
-                    <CardContent>
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                        <Assignment color="primary" sx={{ mr: 1 }} />
-                        <Typography variant="subtitle2">
-                          Quest Suggestion
-                        </Typography>
-                      </Box>
-                      <Typography variant="body2" color="text.secondary" gutterBottom>
-                        {userProfile.completedQuests.length === 0 
-                          ? 'Get started with your first quest'
-                          : 'Continue your learning journey'
-                        }
-                      </Typography>
-                      <Typography variant="body2">
-                        {userProfile.completedQuests.length === 0
-                          ? 'Try a beginner-level quest to start earning XP and building skills.'
-                          : `You've completed ${userProfile.completedQuests.length} quests. Keep up the momentum!`
-                        }
-                      </Typography>
-                      <Button 
-                        size="small" 
-                        variant="outlined" 
-                        sx={{ mt: 2 }}
-                        onClick={() => navigate('/quests')}
-                      >
-                        Browse Quests
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </Grid>
-                
-                <Grid item xs={12} md={4}>
-                  <Card variant="outlined" sx={{ height: '100%' }}>
-                    <CardContent>
-                      <Box sx={{ display: 'flex', alignItems: 'center', mb: 2 }}>
-                        <Lightbulb color="warning" sx={{ mr: 1 }} />
-                        <Typography variant="subtitle2">
-                          Career Tip
-                        </Typography>
-                      </Box>
-                      <Typography variant="body2" color="text.secondary" gutterBottom>
-                        Personalized insight
-                      </Typography>
-                      <Typography variant="body2">
-                        {userProfile.careerPaths.length === 0
-                          ? 'Start by selecting 1-2 career paths that interest you to get targeted skill recommendations.'
-                          : topSkills.length > 0
-                            ? `Your strongest skill is ${topSkills[0][0].split('_').join(' ')}. Consider taking advanced quests in this area.`
-                            : 'Build a diverse skill set by completing quests from different categories.'
-                        }
-                      </Typography>
-                      <Button 
-                        size="small" 
-                        variant="outlined" 
-                        sx={{ mt: 2 }}
-                        onClick={() => navigate(userProfile.careerPaths.length === 0 ? '/profile' : '/careers')}
-                      >
-                        {userProfile.careerPaths.length === 0 ? 'Set Goals' : 'Explore Careers'}
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-        </Grid>
 
-        {/* Smart Quest Recommendations */}
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                <Typography variant="h6">
-                  🤖 Smart Quest Recommendations
-                </Typography>
-                <Button 
-                  variant="outlined" 
-                  size="small"
-                  onClick={() => navigate('/recommended-quests')}
-                >
-                  View All
-                </Button>
-              </Box>
-              
-              {loadingRecommendations ? (
-                <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-                  <CircularProgress size={32} />
-                </Box>
-              ) : quickRecommendations.length === 0 ? (
-                <Box sx={{ textAlign: 'center', py: 4 }}>
-                  <Lightbulb sx={{ fontSize: 48, color: 'text.secondary', mb: 2 }} />
-                  <Typography color="text.secondary" gutterBottom>
-                    No recommendations available yet
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    Complete a few quests and set career goals to get personalized recommendations
-                  </Typography>
-                </Box>
-              ) : (
-                <Grid container spacing={2}>
-                  {quickRecommendations.map((recommendation) => {
-                    const quest = recommendation.quest;
-                    const isCompleted = userProfile.completedQuests.includes(quest.id);
-                    
-                    return (
-                      <Grid item xs={12} sm={6} md={4} key={quest.id}>
-                        <Card 
-                          variant="outlined" 
-                          sx={{ 
-                            height: '100%',
-                            opacity: isCompleted ? 0.6 : 1,
-                            background: recommendation.score >= 80 
-                              ? 'linear-gradient(135deg, rgba(76, 175, 80, 0.1), rgba(139, 195, 74, 0.1))'
-                              : recommendation.score >= 60
-                                ? 'linear-gradient(135deg, rgba(255, 152, 0, 0.1), rgba(255, 193, 7, 0.1))'
-                                : 'background.paper',
-                          }}
-                        >
-                          <CardContent sx={{ p: 2 }}>
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 1 }}>
-                              <Typography variant="subtitle2" sx={{ flexGrow: 1, pr: 1 }}>
-                                {quest.title}
-                                {isCompleted && ' ✅'}
-                              </Typography>
-                              <Chip
-                                label={`${Math.round(recommendation.score)}%`}
-                                size="small"
-                                color={
-                                  recommendation.score >= 80 ? 'success' :
-                                  recommendation.score >= 60 ? 'warning' : 'primary'
-                                }
-                                sx={{ fontSize: '0.6rem' }}
-                              />
-                            </Box>
-                            
-                            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                              {quest.description.length > 100 
-                                ? quest.description.substring(0, 100) + '...'
-                                : quest.description
-                              }
-                            </Typography>
-                            
-                            <Box sx={{ display: 'flex', gap: 0.5, mb: 2 }}>
-                              <Chip 
-                                label={quest.difficulty} 
-                                size="small" 
-                                color={
-                                  quest.difficulty === 'beginner' ? 'success' :
-                                  quest.difficulty === 'intermediate' ? 'warning' : 'error'
-                                }
-                              />
-                              <Chip 
-                                label={`${quest.xpReward} XP`} 
-                                size="small" 
-                                color="primary"
-                              />
-                            </Box>
-                            
-                            {recommendation.reasons.length > 0 && (
-                              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
-                                💡 {recommendation.reasons[0].message}
-                              </Typography>
-                            )}
-                            
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                              <Schedule fontSize="small" color="action" />
-                              <Typography variant="caption" color="text.secondary">
-                                ~{quest.estimatedHours}h
-                              </Typography>
-                            </Box>
-                          </CardContent>
-                          
-                          <Box sx={{ p: 1, pt: 0 }}>
-                            {isCompleted ? (
-                              <Button size="small" disabled fullWidth>
-                                Completed
-                              </Button>
-                            ) : (
-                              <Button 
-                                size="small" 
-                                variant="outlined" 
-                                fullWidth
-                                startIcon={<PlayArrow />}
-                                onClick={() => navigate('/recommended-quests')}
-                              >
-                                View Details
-                              </Button>
-                            )}
-                          </Box>
-                        </Card>
-                      </Grid>
-                    );
-                  })}
-                </Grid>
-              )}
-            </CardContent>
-          </Card>
-        </Grid>
 
-        {/* Quick Actions */}
-        <Grid item xs={12}>
-          <Card>
-            <CardContent>
-              <Typography variant="h6" gutterBottom>
-                Quick Actions
-              </Typography>
-              <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap' }}>
-                <Button 
-                  variant="contained" 
-                  startIcon={<Assignment />}
-                  onClick={() => navigate('/quests')}
-                >
-                  Browse Quests
-                </Button>
-                <Button 
-                  variant="outlined" 
-                  startIcon={<TrendingUp />}
-                  onClick={() => navigate('/careers')}
-                >
-                  Explore Careers
-                </Button>
-                <Button 
-                  variant="outlined" 
-                  startIcon={<EmojiEvents />}
-                  onClick={() => navigate('/achievements')}
-                >
-                  View Achievements
-                </Button>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
       </Grid>
-    </Box>
+        </Box>
+      </Container>
+    </div>
   );
 };
 

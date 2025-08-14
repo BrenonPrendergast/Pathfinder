@@ -10,6 +10,7 @@ import {
   Alert,
   Tabs,
   Tab,
+  Container,
 } from '@mui/material';
 import {
   Lock,
@@ -17,6 +18,10 @@ import {
 } from '@mui/icons-material';
 import { achievementService, Achievement } from '../services';
 import { useAuth } from '../contexts/AuthContext';
+import GradientText from '../components/GradientText';
+import GamingBackground from '../components/backgrounds/GamingBackground';
+import FloatingNodes from '../components/backgrounds/FloatingNodes';
+import InteractiveSpotlight from '../components/backgrounds/InteractiveSpotlight';
 
 interface TabPanelProps {
   children?: React.ReactNode;
@@ -142,64 +147,122 @@ const AchievementsPage: React.FC = () => {
 
   if (loading) {
     return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
-        <CircularProgress />
-      </Box>
+      <div className="min-h-screen bg-background relative overflow-hidden">
+        <GamingBackground variant="combined" intensity="medium" />
+        <FloatingNodes nodeCount={20} connectionOpacity={0.12} />
+        <InteractiveSpotlight size="large" intensity="subtle" color="primary" />
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 10 }}>
+          <Box sx={{ display: 'flex', justifyContent: 'center', py: 8 }}>
+            <CircularProgress />
+          </Box>
+        </Container>
+      </div>
     );
   }
 
   return (
-    <Box>
-      <Typography variant="h3" component="h1" gutterBottom>
-        Achievements 🏆
-      </Typography>
-      <Typography variant="body1" color="text.secondary" sx={{ mb: 2 }}>
-        Unlock badges and earn points by completing various challenges and milestones.
-      </Typography>
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Gaming Background Layers */}
+      <GamingBackground variant="combined" intensity="medium" />
+      <FloatingNodes nodeCount={20} connectionOpacity={0.12} />
+      <InteractiveSpotlight size="large" intensity="subtle" color="primary" />
 
-      {/* Stats */}
-      <Box sx={{ display: 'flex', gap: 2, mb: 4 }}>
-        <Chip 
-          label={`${unlockedAchievements.length}/${achievements.length} Unlocked`} 
-          color="primary" 
-          size="medium"
-        />
-        <Chip 
-          label={`${totalPoints} Total Points`} 
-          color="secondary" 
-          size="medium"
-        />
-      </Box>
+      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 10 }}>
+        <Box sx={{ py: { xs: 4, md: 6 } }}>
+          {/* Header */}
+          <Box sx={{ textAlign: 'center', mb: 4 }}>
+            <GradientText
+              variant="h2"
+              component="h1"
+              animated={true}
+              sx={{ 
+                fontSize: { xs: '2.5rem', md: '3.5rem' },
+                mb: 2,
+              }}
+            >
+              Achievements
+            </GradientText>
+            <Typography
+              variant="h6"
+              color="text.secondary"
+              sx={{ 
+                mb: 4, 
+                maxWidth: '800px', 
+                mx: 'auto', 
+                lineHeight: 1.6,
+                fontSize: { xs: '1.125rem', md: '1.25rem' },
+              }}
+            >
+              Unlock badges and earn points by completing various challenges and milestones.
+            </Typography>
+          </Box>
 
-      {/* Error Alert */}
-      {error && (
-        <Alert severity="error" sx={{ mb: 4 }}>
-          {error}
-        </Alert>
-      )}
+          {/* Stats */}
+          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2, mb: 4 }}>
+            <Chip 
+              label={`${unlockedAchievements.length}/${achievements.length} Unlocked`} 
+              size="medium"
+              sx={{ backgroundColor: '#6366f1', color: 'white' }}
+            />
+            <Chip 
+              label={`${totalPoints} Total Points`} 
+              size="medium"
+              sx={{ backgroundColor: '#00B162', color: 'white' }}
+            />
+          </Box>
 
-      {/* No Achievements */}
-      {!loading && achievements.length === 0 && !error && (
-        <Alert severity="info" sx={{ mb: 4 }}>
-          No achievements available yet. Check back soon for new challenges!
-        </Alert>
-      )}
+          {/* Error Alert */}
+          {error && (
+            <Alert severity="error" sx={{ mb: 4 }}>
+              {error}
+            </Alert>
+          )}
 
-      {/* Tabs */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs value={tabValue} onChange={handleTabChange}>
-          <Tab label={`Unlocked (${unlockedAchievements.length})`} />
-          <Tab label={`Locked (${lockedAchievements.length})`} />
-          <Tab label={`All (${achievements.length})`} />
-        </Tabs>
-      </Box>
+          {/* No Achievements */}
+          {!loading && achievements.length === 0 && !error && (
+            <Alert severity="info" sx={{ mb: 4 }}>
+              No achievements available yet. Check back soon for new challenges!
+            </Alert>
+          )}
+
+          {/* Tabs */}
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+            <Tabs 
+              value={tabValue} 
+              onChange={handleTabChange}
+              centered
+              sx={{
+                '& .MuiTab-root': {
+                  fontFamily: '"Nacelle", sans-serif',
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  fontSize: '0.9rem',
+                  color: 'text.secondary',
+                  '&.Mui-selected': {
+                    color: '#6366f1',
+                  },
+                },
+                '& .MuiTabs-indicator': {
+                  backgroundColor: '#6366f1',
+                },
+              }}
+            >
+              <Tab label={`Unlocked (${unlockedAchievements.length})`} />
+              <Tab label={`Locked (${lockedAchievements.length})`} />
+              <Tab label={`All (${achievements.length})`} />
+            </Tabs>
+          </Box>
 
       {/* Unlocked Achievements */}
       <TabPanel value={tabValue} index={0}>
         <Grid container spacing={3}>
           {unlockedAchievements.map((achievement) => (
             <Grid item xs={12} sm={6} md={4} key={achievement.id}>
-              <Card sx={{ height: '100%', position: 'relative' }}>
+              <Card sx={{ 
+                height: '100%', 
+                position: 'relative',
+                background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)',
+              }}>
                 <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
                   <CheckCircle color="success" />
                 </Box>
@@ -237,12 +300,12 @@ const AchievementsPage: React.FC = () => {
             </Grid>
           ))}
         </Grid>
-        {unlockedAchievements.length === 0 && (
-          <Typography color="text.secondary" textAlign="center">
-            No achievements unlocked yet. Complete quests and level up to earn your first badges!
-          </Typography>
-        )}
-      </TabPanel>
+            {unlockedAchievements.length === 0 && (
+              <Typography color="text.secondary" textAlign="center">
+                No achievements unlocked yet. Complete quests and level up to earn your first badges!
+              </Typography>
+            )}
+          </TabPanel>
 
       {/* Locked Achievements */}
       <TabPanel value={tabValue} index={1}>
@@ -253,7 +316,12 @@ const AchievementsPage: React.FC = () => {
             
             return (
               <Grid item xs={12} sm={6} md={4} key={achievement.id}>
-                <Card sx={{ height: '100%', position: 'relative', opacity: 0.7 }}>
+                <Card sx={{ 
+                  height: '100%', 
+                  position: 'relative', 
+                  opacity: 0.7,
+                  background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)',
+                }}>
                   <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
                     <Lock color="action" />
                   </Box>
@@ -316,12 +384,12 @@ const AchievementsPage: React.FC = () => {
             );
           })}
         </Grid>
-        {lockedAchievements.length === 0 && (
-          <Typography color="text.secondary" textAlign="center">
-            Amazing! You've unlocked all available achievements! 🎉
-          </Typography>
-        )}
-      </TabPanel>
+            {lockedAchievements.length === 0 && (
+              <Typography color="text.secondary" textAlign="center">
+                Amazing! You've unlocked all available achievements! 🎉
+              </Typography>
+            )}
+          </TabPanel>
 
       {/* All Achievements */}
       <TabPanel value={tabValue} index={2}>
@@ -336,7 +404,8 @@ const AchievementsPage: React.FC = () => {
                 <Card sx={{ 
                   height: '100%', 
                   position: 'relative', 
-                  opacity: unlocked ? 1 : 0.7 
+                  opacity: unlocked ? 1 : 0.7,
+                  background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)',
                 }}>
                   <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
                     {unlocked ? (
@@ -410,9 +479,11 @@ const AchievementsPage: React.FC = () => {
               </Grid>
             );
           })}
-        </Grid>
-      </TabPanel>
-    </Box>
+          </Grid>
+          </TabPanel>
+        </Box>
+      </Container>
+    </div>
   );
 };
 

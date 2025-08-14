@@ -456,16 +456,13 @@ const SkillTree: React.FC<SkillTreeProps> = ({ careerPath = 'general', interacti
           width: 280,
           minHeight: 160,
           position: 'relative',
-          background: isUnlocked 
-            ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1))'
-            : 'linear-gradient(135deg, rgba(75, 85, 99, 0.3), rgba(55, 65, 81, 0.3))',
-          border: `2px solid ${isUnlocked ? getSkillLevelColor(currentLevel) : theme.palette.grey[600]}`,
+          background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)',
+          border: `2px solid ${isUnlocked ? getSkillLevelColor(currentLevel) : 'rgba(99, 102, 241, 0.3)'}`,
           borderRadius: 2,
           opacity: isUnlocked ? 1 : 0.6,
           transition: 'all 0.3s ease',
           '&:hover': isUnlocked ? {
-            transform: 'translateY(-4px)',
-            boxShadow: theme.shadows[8]
+            transform: 'translateY(-2px)',
           } : {},
           ...(isRecommended && {
             border: `2px dashed ${theme.palette.warning.main}`,
@@ -892,7 +889,6 @@ const SkillTree: React.FC<SkillTreeProps> = ({ careerPath = 'general', interacti
                       <Button
                         size="small"
                         variant="contained"
-                        color="primary"
                         onClick={() => addPoint(skill.id)}
                         disabled={!canAddPoint}
                         sx={{
@@ -900,7 +896,11 @@ const SkillTree: React.FC<SkillTreeProps> = ({ careerPath = 'general', interacti
                           width: 20,
                           height: 20,
                           p: 0,
-                          fontSize: 12
+                          fontSize: 12,
+                          backgroundColor: '#00B162',
+                          '&:hover': {
+                            backgroundColor: '#009654',
+                          },
                         }}
                       >
                         +
@@ -1093,6 +1093,12 @@ const SkillTree: React.FC<SkillTreeProps> = ({ careerPath = 'general', interacti
               <Button 
                 variant="contained" 
                 onClick={() => setAssessmentDialog(false)}
+                sx={{
+                  backgroundColor: '#00B162',
+                  '&:hover': {
+                    backgroundColor: '#009654',
+                  },
+                }}
               >
                 Save Assessment
               </Button>

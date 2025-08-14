@@ -6,6 +6,7 @@ import AOS from 'aos';
 import 'aos/dist/aos.css';
 import './globals.css';
 import { AuthProvider } from './contexts/AuthContext';
+import { NotificationProvider } from './contexts/NotificationContext';
 import Layout from './components/Layout/Layout';
 import HomePage from './pages/HomePage';
 import CareersPage from './pages/CareersPage';
@@ -224,7 +225,7 @@ const theme = createTheme({
           transition: 'all 200ms cubic-bezier(0.22, 1, 0.36, 1)', // Looty's smooth transition
           '&:hover': {
             transform: 'translateY(-2px)',
-            boxShadow: '0 14px 38px -12px hsl(100 82% 45% / 0.35)', // Subtle primary glow on hover
+            boxShadow: '0 14px 38px -12px hsl(250 86% 67% / 0.35)', // Subtle purple glow on hover
           },
         },
       },
@@ -257,8 +258,9 @@ function App() {
       <ThemeProvider theme={theme}>
         <CssBaseline />
         <AuthProvider>
-          <Router>
-            <Layout>
+          <NotificationProvider>
+            <Router>
+              <Layout>
               <Routes>
               {/* Public routes */}
               <Route path="/" element={<HomePage />} />
@@ -311,8 +313,9 @@ function App() {
               {/* Catch all route */}
               <Route path="*" element={<HomePage />} />
               </Routes>
-            </Layout>
-          </Router>
+              </Layout>
+            </Router>
+          </NotificationProvider>
         </AuthProvider>
       </ThemeProvider>
     </ErrorBoundary>

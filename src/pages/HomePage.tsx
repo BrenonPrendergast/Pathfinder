@@ -179,7 +179,15 @@ const HomePage: React.FC = () => {
                 size="large"
                 endIcon={<ArrowForward />}
                 onClick={() => navigate('/dashboard')}
-                sx={{ fontSize: '1.1rem', px: 5, py: 1.5 }}
+                sx={{ 
+                  fontSize: '1.1rem', 
+                  px: 5, 
+                  py: 1.5,
+                  backgroundColor: '#00B162',
+                  '&:hover': {
+                    backgroundColor: '#009654',
+                  },
+                }}
               >
                 Continue Your Journey
               </Button>
@@ -239,7 +247,7 @@ const HomePage: React.FC = () => {
               }}
             >
               <Typography
-                variant="body2"
+                variant="h4"
                 sx={{
                   background: 'linear-gradient(to right, #6366f1, #c7d2fe)',
                   backgroundClip: 'text',
@@ -248,23 +256,12 @@ const HomePage: React.FC = () => {
                   fontWeight: 600,
                   textTransform: 'uppercase',
                   letterSpacing: '0.1em',
+                  fontSize: { xs: '1.5rem', md: '2rem' },
                 }}
               >
                 How it Works
               </Typography>
             </Box>
-            
-            <GradientText
-              variant="h2"
-              component="h2"
-              animated={true}
-              sx={{ 
-                mb: 3,
-                fontSize: { xs: '5rem', md: '4rem' }
-              }}
-            >
-              How It Works
-            </GradientText>
             
             <Typography
               variant="body1"
@@ -301,7 +298,9 @@ const HomePage: React.FC = () => {
                       textAlign: 'center',
                       pt: 4,
                       px: 3,
-                      pb: 2,
+                      pb: 3,
+                      display: 'flex',
+                      flexDirection: 'column',
                     }}
                   >
                     <Box
@@ -339,19 +338,28 @@ const HomePage: React.FC = () => {
                         lineHeight: 1.6,
                         opacity: 0.8,
                         mb: 3,
+                        flexGrow: 1,
                       }}
                     >
                       {feature.description}
                     </Typography>
                     
-                    <Button
-                      variant="contained"
-                      endIcon={<ArrowForward />}
-                      onClick={feature.action}
-                      sx={{ minWidth: '140px' }}
-                    >
-                      {feature.buttonText}
-                    </Button>
+                    <Box sx={{ mt: 'auto' }}>
+                      <Button
+                        variant="contained"
+                        endIcon={<ArrowForward />}
+                        onClick={feature.action}
+                        sx={{ 
+                          minWidth: '140px',
+                          backgroundColor: '#00B162',
+                          '&:hover': {
+                            backgroundColor: '#009654',
+                          },
+                        }}
+                      >
+                        {feature.buttonText}
+                      </Button>
+                    </Box>
                   </CardContent>
                 </Card>
               </Grid>
@@ -461,7 +469,10 @@ const HomePage: React.FC = () => {
                   fontSize: '1.1rem', 
                   px: 6, 
                   py: 2,
-                  background: 'linear-gradient(135deg, #059669, #6366f1)',
+                  backgroundColor: '#00B162',
+                  '&:hover': {
+                    backgroundColor: '#009654',
+                  },
                 }}
               >
                 Get Started Free

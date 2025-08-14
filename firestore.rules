@@ -45,12 +45,13 @@ service cloud.firestore {
         resource.data.userId == request.auth.uid;
     }
     
-    // User skill progress - users can read/write their own skill data
+    // User skill progress - users can read/write their own skill data, admins can read all
     match /user-skills/{userSkillDoc} {
       allow read, write: if request.auth != null && 
         resource.data.userId == request.auth.uid;
       allow create: if request.auth != null && 
         request.resource.data.userId == request.auth.uid;
+      allow read: if isAdmin(); // Admins can read all user skills for constellation import
     }
     
     // Hard skills - anyone can read, only admins can write
@@ -81,6 +82,12 @@ service cloud.firestore {
     match /skill-assessments/{assessmentDoc} {
       allow read, write: if request.auth != null && 
         resource.data.userId == request.auth.uid;
+    }
+    
+    // Skill constellations - anyone can read, only admins can write
+    match /skill-constellations/{constellationDoc} {
+      allow read: if true;
+      allow write: if isAdmin();
     }
   }
 }

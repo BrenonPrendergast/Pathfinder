@@ -21,12 +21,15 @@ A gamified career development platform that transforms professional growth into 
 ### 🎮 Gamified Learning
 - **Quest System**: Structured learning paths with XP rewards
 - **Achievement System**: Unlock badges and milestones
-- **Skill Development**: Track proficiency levels and learning hours
+- **Skill Constellations**: Interactive star-map style skill trees with template-based architecture
+- **Template-Based Skills**: Admin-created constellation templates for each career path
 - **Level Progression**: Logarithmic XP system with visual progress tracking
 
 ### 👥 Admin Management
 - **Role-Based Access**: User, admin, and super_admin permissions
 - **Content Management**: Create and manage careers, quests, achievements
+- **Constellation Editor**: Admin-only interface for creating and editing skill tree templates
+- **Template Management**: Design career-specific and general skill constellations
 - **User Analytics**: Engagement metrics and progress tracking
 - **CSV Import/Export**: Bulk data management tools
 
@@ -95,8 +98,46 @@ firebase deploy --only firestore:rules # Deploy security rules
 ### Key Components
 - **Assessment System**: Multi-step career evaluation with personality analysis
 - **Recommendation Engine**: AI-powered career matching with weighted scoring
+- **Skill Constellations**: Interactive React Flow-based skill trees with star-map visualization
+- **Template System**: Admin-created templates for career-specific and general skill paths
 - **Gamification**: XP, levels, achievements, and quest progression
 - **Admin Dashboard**: Comprehensive content and user management
+
+## 📁 Project Structure
+
+```
+Pathfinder/
+├── public/                    # Static assets and HTML template
+├── src/
+│   ├── components/           # Reusable React components
+│   │   ├── assessment/       # 🧠 Career assessment wizard
+│   │   ├── admin/           # 👥 Admin management tools
+│   │   ├── constellation/   # ⭐ Skill constellation components
+│   │   ├── backgrounds/     # 🎨 Particle effects & animations
+│   │   └── Layout/          # Navigation and layout
+│   ├── pages/               # 📄 Main application pages
+│   │   ├── HomePage.tsx     # Landing page
+│   │   ├── DashboardPage.tsx # User dashboard
+│   │   ├── CareersPage.tsx  # Career exploration
+│   │   ├── SkillTreePage.tsx # Skill constellation interface
+│   │   ├── AdminPage.tsx    # Admin management
+│   │   └── AuthPage.tsx     # Authentication
+│   ├── services/            # 🔧 Business logic & API services
+│   │   ├── assessment/      # Assessment processing
+│   │   ├── career/          # Career data management
+│   │   ├── skill/           # Skill constellation system
+│   │   ├── recommendation/  # AI recommendation engine
+│   │   ├── quest/           # Gamification system
+│   │   └── types/           # TypeScript definitions
+│   ├── contexts/            # React Context providers
+│   ├── firebase/            # Firebase configuration
+│   └── App.tsx              # Main application component
+├── functions/               # Firebase Cloud Functions
+├── scripts/                 # Data import/migration scripts
+├── firebase.json            # Firebase project config
+├── firestore.rules         # Database security rules
+└── package.json             # Dependencies and scripts
+```
 
 ### Data Models
 ```typescript
@@ -198,7 +239,14 @@ MIT License - see [LICENSE](LICENSE) file for details.
 
 ## 🔄 Version History
 
-### v2.0.0 - Assessment Revolution (Current)
+### v2.1.0 - Skill Constellation System (Current)
+- Interactive skill constellation templates with star-map visualization
+- Admin constellation editor for creating career-specific skill paths
+- Template-based system replacing mock data with professional UX
+- Coming Soon placeholders for incomplete templates
+- Enhanced skill tree architecture with React Flow
+
+### v2.0.0 - Assessment Revolution
 - Comprehensive 6-step career assessment system
 - AI-powered personality-career matching
 - Enhanced user experience with personalization

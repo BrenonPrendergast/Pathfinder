@@ -25,6 +25,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { cn } from '../../lib/utils';
 import AnimatedLogo from './AnimatedLogo';
 import UserStatsDisplay from './UserStatsDisplay';
+import HeaderNotification from '../HeaderNotification';
 
 interface GamingAppBarProps {
   onDrawerToggle: () => void;
@@ -142,6 +143,9 @@ export default function GamingAppBar({ onDrawerToggle, drawerWidth }: GamingAppB
 
         {/* Spacer */}
         <Box sx={{ flexGrow: 1 }} />
+
+        {/* Header Notification */}
+        <HeaderNotification />
 
         {/* User Stats Display (if logged in) */}
         {currentUser && userProfile && (

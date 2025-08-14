@@ -28,6 +28,7 @@ import {
   Select,
   MenuItem,
   Avatar,
+  Container,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -53,6 +54,10 @@ import AdminCareerForm from '../components/AdminCareerForm';
 import SkillManagement from '../components/admin/SkillManagement';
 import QuestManagement from '../components/admin/QuestManagement';
 import AchievementManagement from '../components/admin/AchievementManagement';
+import GradientText from '../components/GradientText';
+import GamingBackground from '../components/backgrounds/GamingBackground';
+import FloatingNodes from '../components/backgrounds/FloatingNodes';
+import InteractiveSpotlight from '../components/backgrounds/InteractiveSpotlight';
 
 const AdminPage: React.FC = () => {
   const { isAdmin, userProfile } = useAuth();
@@ -394,164 +399,198 @@ const AdminPage: React.FC = () => {
 
   if (!isAdmin()) {
     return (
-      <Box sx={{ p: 3 }}>
-        <Alert severity="error">
-          Access denied. You don't have administrator permissions.
-        </Alert>
-      </Box>
+      <div className="min-h-screen bg-background relative overflow-hidden">
+        <GamingBackground variant="combined" intensity="medium" />
+        <FloatingNodes nodeCount={20} connectionOpacity={0.12} />
+        <InteractiveSpotlight size="large" intensity="subtle" color="primary" />
+        <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 10 }}>
+          <Box sx={{ py: 8 }}>
+            <Alert severity="error">
+              Access denied. You don't have administrator permissions.
+            </Alert>
+          </Box>
+        </Container>
+      </div>
     );
   }
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 4 }}>
-        <AdminPanelSettings color="primary" sx={{ fontSize: 40 }} />
-        <Box>
-          <Typography variant="h3" component="h1">
-            Admin Dashboard
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            Welcome back, {userProfile?.displayName || userProfile?.email}
-          </Typography>
-        </Box>
-      </Box>
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Gaming Background Layers */}
+      <GamingBackground variant="combined" intensity="medium" />
+      <FloatingNodes nodeCount={20} connectionOpacity={0.12} />
+      <InteractiveSpotlight size="large" intensity="subtle" color="primary" />
 
-      {/* Stats Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Work color="primary" />
-                <Box>
-                  <Typography variant="h4">{analytics.totalCareers}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Total Careers
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 10 }}>
+        <Box sx={{ py: { xs: 4, md: 6 } }}>
+          {/* Header */}
+          <Box sx={{ textAlign: 'center', mb: 4 }}>
+            <GradientText
+              variant="h2"
+              component="h1"
+              animated={true}
+              sx={{ 
+                fontSize: { xs: '2.5rem', md: '3.5rem' },
+                mb: 2,
+              }}
+            >
+              Admin Dashboard
+            </GradientText>
+            <Typography
+              variant="h6"
+              color="text.secondary"
+              sx={{ 
+                mb: 4, 
+                maxWidth: '800px', 
+                mx: 'auto', 
+                lineHeight: 1.6,
+                fontSize: { xs: '1.125rem', md: '1.25rem' },
+              }}
+            >
+              Welcome back, {userProfile?.displayName || userProfile?.email}
+            </Typography>
+          </Box>
+
+          {/* Stats Cards */}
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card sx={{ background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)' }}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Work color="primary" />
+                    <Box>
+                      <Typography variant="h4">{analytics.totalCareers}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Total Careers
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
         
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <People color="primary" />
-                <Box>
-                  <Typography variant="h4">{analytics.totalUsers}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Total Users
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card sx={{ background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)' }}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <People color="primary" />
+                    <Box>
+                      <Typography variant="h4">{analytics.totalUsers}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Total Users
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Assignment color="secondary" />
-                <Box>
-                  <Typography variant="h4">{analytics.totalQuests}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Total Quests
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card sx={{ background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)' }}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Assignment color="secondary" />
+                    <Box>
+                      <Typography variant="h4">{analytics.totalQuests}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Total Quests
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <EmojiEvents color="warning" />
-                <Box>
-                  <Typography variant="h4">{analytics.totalAchievements}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Achievements
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card sx={{ background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)' }}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <EmojiEvents color="warning" />
+                    <Box>
+                      <Typography variant="h4">{analytics.totalAchievements}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Achievements
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Psychology color="info" />
-                <Box>
-                  <Typography variant="h4">{analytics.totalSoftSkills}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Soft Skills
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card sx={{ background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)' }}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Psychology color="info" />
+                    <Box>
+                      <Typography variant="h4">{analytics.totalSoftSkills}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Soft Skills
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <TrendingUp color="success" />
-                <Box>
-                  <Typography variant="h4">{analytics.totalHardSkills}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Hard Skills
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card sx={{ background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)' }}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <TrendingUp color="success" />
+                    <Box>
+                      <Typography variant="h4">{analytics.totalHardSkills}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Hard Skills
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <School color="error" />
-                <Box>
-                  <Typography variant="h4">{analytics.totalCertifications}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Certifications
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card sx={{ background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)' }}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <School color="error" />
+                    <Box>
+                      <Typography variant="h4">{analytics.totalCertifications}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Certifications
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Groups color="primary" />
-                <Box>
-                  <Typography variant="h4">{analytics.activeUsers}</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Active Users
-                  </Typography>
-                </Box>
-              </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card sx={{ background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)' }}>
+                <CardContent>
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Groups color="primary" />
+                    <Box>
+                      <Typography variant="h4">{analytics.activeUsers}</Typography>
+                      <Typography variant="body2" color="text.secondary">
+                        Active Users
+                      </Typography>
+                    </Box>
+                  </Box>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
 
-      {/* Additional Analytics Cards */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ backgroundColor: 'primary.main', color: 'primary.contrastText' }}>
-            <CardContent>
+          {/* Additional Analytics Cards */}
+          <Grid container spacing={3} sx={{ mb: 4 }}>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card sx={{ 
+                backgroundColor: 'primary.main', 
+                color: 'primary.contrastText',
+                background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)'
+              }}>
+                <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Analytics sx={{ color: 'primary.contrastText' }} />
                 <Box>
@@ -561,13 +600,17 @@ const AdminPage: React.FC = () => {
                   </Typography>
                 </Box>
               </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ backgroundColor: 'secondary.main', color: 'secondary.contrastText' }}>
-            <CardContent>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card sx={{ 
+                backgroundColor: 'secondary.main', 
+                color: 'secondary.contrastText',
+                background: 'linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%)'
+              }}>
+                <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Schedule sx={{ color: 'secondary.contrastText' }} />
                 <Box>
@@ -577,13 +620,17 @@ const AdminPage: React.FC = () => {
                   </Typography>
                 </Box>
               </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ backgroundColor: 'success.main', color: 'success.contrastText' }}>
-            <CardContent>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card sx={{ 
+                backgroundColor: 'success.main', 
+                color: 'success.contrastText',
+                background: 'linear-gradient(135deg, #00B162 0%, #10b981 100%)'
+              }}>
+                <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <EmojiEvents sx={{ color: 'success.contrastText' }} />
                 <Box>
@@ -593,13 +640,17 @@ const AdminPage: React.FC = () => {
                   </Typography>
                 </Box>
               </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card sx={{ backgroundColor: 'warning.main', color: 'warning.contrastText' }}>
-            <CardContent>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card sx={{ 
+                backgroundColor: 'warning.main', 
+                color: 'warning.contrastText',
+                background: 'linear-gradient(135deg, #f59e0b 0%, #f97316 100%)'
+              }}>
+                <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <TrendingUp sx={{ color: 'warning.contrastText' }} />
                 <Box>
@@ -609,13 +660,13 @@ const AdminPage: React.FC = () => {
                   </Typography>
                 </Box>
               </Box>
-            </CardContent>
-          </Card>
-        </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
 
-        <Grid item xs={12} sm={6} md={3}>
-          <Card>
-            <CardContent>
+            <Grid item xs={12} sm={6} md={3}>
+              <Card sx={{ background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)' }}>
+                <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <AdminPanelSettings color="primary" />
                 <Box>
@@ -627,32 +678,47 @@ const AdminPage: React.FC = () => {
                   </Typography>
                 </Box>
               </Box>
-            </CardContent>
-          </Card>
-        </Grid>
-      </Grid>
+                </CardContent>
+              </Card>
+            </Grid>
+          </Grid>
 
-      {/* Admin Tabs */}
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs 
-          value={activeTab} 
-          onChange={(e, newValue) => setActiveTab(newValue)}
-          variant="scrollable"
-          scrollButtons="auto"
-        >
+          {/* Admin Tabs */}
+          <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
+            <Tabs 
+              value={activeTab} 
+              onChange={(e, newValue) => setActiveTab(newValue)}
+              variant="scrollable"
+              scrollButtons="auto"
+              sx={{
+                '& .MuiTab-root': {
+                  fontFamily: '"Nacelle", sans-serif',
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  fontSize: '0.9rem',
+                  color: 'text.secondary',
+                  '&.Mui-selected': {
+                    color: '#6366f1',
+                  },
+                },
+                '& .MuiTabs-indicator': {
+                  backgroundColor: '#6366f1',
+                },
+              }}
+            >
           <Tab label="Career Management" value="careers" />
           <Tab label="User Management" value="users" />
           <Tab label="Quest Management" value="quests" />
           <Tab label="Skill Management" value="skills" />
           <Tab label="Achievement Management" value="achievements" />
           <Tab label="Data Management" value="data" />
-        </Tabs>
-      </Box>
+            </Tabs>
+          </Box>
 
-      {/* Career Management Tab */}
-      {activeTab === 'careers' && (
-        <Card>
-        <CardContent>
+          {/* Career Management Tab */}
+          {activeTab === 'careers' && (
+            <Card sx={{ background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)' }}>
+            <CardContent>
           <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
             <Typography variant="h5" component="h2">
               Career Management
@@ -702,6 +768,12 @@ const AdminPage: React.FC = () => {
                 startIcon={<AddIcon />}
                 onClick={() => setCareerFormOpen(true)}
                 size="small"
+                sx={{
+                  backgroundColor: '#00B162',
+                  '&:hover': {
+                    backgroundColor: '#009654',
+                  },
+                }}
               >
                 Add Career
               </Button>
@@ -812,14 +884,14 @@ const AdminPage: React.FC = () => {
               </Typography>
             </Box>
           )}
-        </CardContent>
-        </Card>
-      )}
+            </CardContent>
+            </Card>
+          )}
 
-      {/* User Management Tab */}
-      {activeTab === 'users' && (
-        <Card>
-          <CardContent>
+          {/* User Management Tab */}
+          {activeTab === 'users' && (
+            <Card sx={{ background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)' }}>
+              <CardContent>
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
               <Typography variant="h5" component="h2">
                 User Management
@@ -914,14 +986,14 @@ const AdminPage: React.FC = () => {
                 </Typography>
               </Box>
             )}
-          </CardContent>
-        </Card>
-      )}
+              </CardContent>
+            </Card>
+          )}
 
-      {/* Data Management Tab */}
-      {activeTab === 'data' && (
-        <Card>
-          <CardContent>
+          {/* Data Management Tab */}
+          {activeTab === 'data' && (
+            <Card sx={{ background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)' }}>
+              <CardContent>
             <Typography variant="h5" component="h2" sx={{ mb: 3 }}>
               Database Management
             </Typography>
@@ -938,7 +1010,10 @@ const AdminPage: React.FC = () => {
             <Grid container spacing={3}>
               {/* Certification Seeding */}
               <Grid item xs={12} sm={6} md={4}>
-                <Card sx={{ height: '100%' }}>
+                <Card sx={{ 
+                  height: '100%',
+                  background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.3), transparent)'
+                }}>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
                       Professional Certifications
@@ -961,7 +1036,13 @@ const AdminPage: React.FC = () => {
                       onClick={handleSeedCertifications}
                       disabled={certSeeding}
                       fullWidth
-                      sx={{ mt: 'auto' }}
+                      sx={{ 
+                        mt: 'auto',
+                        backgroundColor: '#00B162',
+                        '&:hover': {
+                          backgroundColor: '#009654',
+                        },
+                      }}
                     >
                       {certSeeding ? 'Seeding...' : 'Seed Certifications'}
                     </Button>
@@ -971,7 +1052,10 @@ const AdminPage: React.FC = () => {
 
               {/* Future seed operations can be added here */}
               <Grid item xs={12} sm={6} md={4}>
-                <Card sx={{ height: '100%' }}>
+                <Card sx={{ 
+                  height: '100%',
+                  background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.3), transparent)'
+                }}>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
                       Hard Skills (O*NET)
@@ -992,7 +1076,10 @@ const AdminPage: React.FC = () => {
               </Grid>
 
               <Grid item xs={12} sm={6} md={4}>
-                <Card sx={{ height: '100%' }}>
+                <Card sx={{ 
+                  height: '100%',
+                  background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.3), transparent)'
+                }}>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
                       Achievement System
@@ -1012,24 +1099,24 @@ const AdminPage: React.FC = () => {
                 </Card>
               </Grid>
             </Grid>
-          </CardContent>
-        </Card>
-      )}
+              </CardContent>
+            </Card>
+          )}
 
-      {/* Quest Management Tab */}
-      {activeTab === 'quests' && (
-        <QuestManagement />
-      )}
+          {/* Quest Management Tab */}
+          {activeTab === 'quests' && (
+            <QuestManagement />
+          )}
 
-      {/* Skill Management Tab */}
-      {activeTab === 'skills' && (
-        <SkillManagement />
-      )}
+          {/* Skill Management Tab */}
+          {activeTab === 'skills' && (
+            <SkillManagement />
+          )}
 
-      {/* Achievement Management Tab */}
-      {activeTab === 'achievements' && (
-        <AchievementManagement />
-      )}
+          {/* Achievement Management Tab */}
+          {activeTab === 'achievements' && (
+            <AchievementManagement />
+          )}
 
       {/* Career Form Dialog */}
       <AdminCareerForm
@@ -1050,12 +1137,24 @@ const AdminPage: React.FC = () => {
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
-          <Button onClick={confirmDeleteCareer} color="error" variant="contained">
+          <Button 
+            onClick={confirmDeleteCareer} 
+            color="error" 
+            variant="contained"
+            sx={{
+              backgroundColor: '#ef4444',
+              '&:hover': {
+                backgroundColor: '#dc2626',
+              },
+            }}
+          >
             Delete
           </Button>
         </DialogActions>
-      </Dialog>
-    </Box>
+          </Dialog>
+        </Box>
+      </Container>
+    </div>
   );
 };
 

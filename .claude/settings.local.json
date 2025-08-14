@@ -31,7 +31,9 @@
       "Bash(PORT=3002 npm start)",
       "Bash(npm uninstall:*)",
       "Bash(git rm:*)",
-      "Bash(cmd //c:*)"
+      "Bash(cmd //c:*)",
+      "Bash(npx kill-port:*)",
+      "WebSearch"
     ],
     "deny": []
   }

@@ -15,7 +15,8 @@ import {
   FormControl,
   InputLabel,
   Select,
-  MenuItem
+  MenuItem,
+  Container
 } from '@mui/material';
 import {
   Search,
@@ -39,6 +40,10 @@ import {
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { careerService, careerFieldsService, Career, CAREER_FIELDS, CareerFieldKey } from '../services';
+import GradientText from '../components/GradientText';
+import GamingBackground from '../components/backgrounds/GamingBackground';
+import FloatingNodes from '../components/backgrounds/FloatingNodes';
+import InteractiveSpotlight from '../components/backgrounds/InteractiveSpotlight';
 
 
 const CareersPage: React.FC = () => {
@@ -331,13 +336,40 @@ const CareersPage: React.FC = () => {
   };
 
   return (
-    <Box>
-        <Typography variant="h3" component="h1" gutterBottom>
-          Explore Career Paths 
-        </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
-          Discover over 1,000 career opportunities from the O*NET database. Search by keywords or browse by industry field.
-        </Typography>
+    <div className="min-h-screen bg-background relative overflow-hidden">
+      {/* Gaming Background Layers */}
+      <GamingBackground variant="combined" intensity="medium" />
+      <FloatingNodes nodeCount={20} connectionOpacity={0.12} />
+      <InteractiveSpotlight size="large" intensity="subtle" color="primary" />
+
+      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 10 }}>
+        <Box sx={{ py: { xs: 4, md: 6 } }}>
+        <Box sx={{ textAlign: 'center', mb: 4 }}>
+          <GradientText
+            variant="h2"
+            component="h1"
+            animated={true}
+            sx={{ 
+              fontSize: { xs: '2.5rem', md: '3.5rem' },
+              mb: 2,
+            }}
+          >
+            Explore Career Paths
+          </GradientText>
+          <Typography
+            variant="h6"
+            color="text.secondary"
+            sx={{ 
+              mb: 4, 
+              maxWidth: '800px', 
+              mx: 'auto', 
+              lineHeight: 1.6,
+              fontSize: { xs: '1.125rem', md: '1.25rem' },
+            }}
+          >
+            Discover over 1,000 career opportunities. Search by keywords or browse by industry field.
+          </Typography>
+        </Box>
 
         {/* Search Bar and Career Field Selector on same line */}
         <Box sx={{ display: 'flex', gap: 2, mb: 4, alignItems: 'flex-start' }}>
@@ -350,13 +382,13 @@ const CareersPage: React.FC = () => {
               flex: 2,
               '& .MuiOutlinedInput-root': {
                 '& fieldset': {
-                  borderColor: 'rgba(25, 118, 210, 0.23)',
+                  borderColor: 'rgba(99, 102, 241, 0.23)',
                 },
                 '&:hover fieldset': {
-                  borderColor: 'rgba(25, 118, 210, 0.5)',
+                  borderColor: 'rgba(99, 102, 241, 0.5)',
                 },
                 '&.Mui-focused fieldset': {
-                  borderColor: 'primary.main',
+                  borderColor: '#6366f1',
                 },
               },
             }}
@@ -374,13 +406,13 @@ const CareersPage: React.FC = () => {
             minWidth: 250,
             '& .MuiOutlinedInput-root': {
               '& fieldset': {
-                borderColor: 'rgba(25, 118, 210, 0.23)',
+                borderColor: 'rgba(99, 102, 241, 0.23)',
               },
               '&:hover fieldset': {
-                borderColor: 'rgba(25, 118, 210, 0.5)',
+                borderColor: 'rgba(99, 102, 241, 0.5)',
               },
               '&.Mui-focused fieldset': {
-                borderColor: 'primary.main',
+                borderColor: '#6366f1',
               },
             },
           }}>
@@ -439,7 +471,20 @@ const CareersPage: React.FC = () => {
                   sx={{ 
                     minWidth: '40px',
                     height: '40px',
-                    fontSize: '0.875rem'
+                    fontSize: '0.875rem',
+                    ...(selectedLetter === letter ? {
+                      backgroundColor: '#00B162',
+                      '&:hover': {
+                        backgroundColor: '#009654',
+                      },
+                    } : {
+                      borderColor: '#00B162',
+                      color: '#00B162',
+                      '&:hover': {
+                        backgroundColor: 'rgba(0, 177, 98, 0.08)',
+                        borderColor: '#00B162',
+                      },
+                    })
                   }}
                   onClick={() => handleLetterFilter(letter)}
                 >
@@ -499,10 +544,7 @@ const CareersPage: React.FC = () => {
                         height: '100%', 
                         display: 'flex', 
                         flexDirection: 'column',
-                        transition: 'transform 0.2s ease-in-out',
-                        '&:hover': {
-                          transform: 'translateY(-4px)',
-                        },
+                        background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.5), transparent)',
                       }}
                     >
                       <CardContent sx={{ flexGrow: 1 }}>
@@ -523,8 +565,14 @@ const CareersPage: React.FC = () => {
                         <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 2 }}>
                           <Chip 
                             label={career.difficulty} 
-                            color={getDifficultyColor(career.difficulty) as any}
-                            size="small" 
+                            color={career.difficulty === 'beginner' ? undefined : getDifficultyColor(career.difficulty) as any}
+                            size="small"
+                            sx={{
+                              ...(career.difficulty === 'beginner' ? {
+                                backgroundColor: '#00B162',
+                                color: 'white',
+                              } : {})
+                            }}
                           />
                           <Chip 
                             label={`${career.estimatedTimeToMaster} months`} 
@@ -536,8 +584,8 @@ const CareersPage: React.FC = () => {
 
                         {career.averageSalary && (
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                            <AttachMoney color="success" fontSize="small" />
-                            <Typography variant="body2" color="success.main">
+                            <AttachMoney sx={{ color: '#00B162' }} fontSize="small" />
+                            <Typography variant="body2" sx={{ color: '#00B162' }}>
                               {formatSalary(career.averageSalary)}
                             </Typography>
                           </Box>
@@ -554,6 +602,14 @@ const CareersPage: React.FC = () => {
                           size="small" 
                           endIcon={<ArrowForward />}
                           onClick={() => navigate(`/careers/${career.id}`)}
+                          sx={{
+                            backgroundColor: '#00B162',
+                            color: 'white',
+                            '&:hover': {
+                              backgroundColor: '#009654',
+                            },
+                          }}
+                          variant="contained"
                         >
                           Learn More
                         </Button>
@@ -571,6 +627,18 @@ const CareersPage: React.FC = () => {
                     onClick={loadMoreCareers}
                     disabled={loadingMore}
                     startIcon={loadingMore ? <CircularProgress size={20} /> : undefined}
+                    sx={{
+                      borderColor: '#00B162',
+                      color: '#00B162',
+                      '&:hover': {
+                        backgroundColor: 'rgba(0, 177, 98, 0.08)',
+                        borderColor: '#00B162',
+                      },
+                      '&:disabled': {
+                        borderColor: 'rgba(0, 177, 98, 0.3)',
+                        color: 'rgba(0, 177, 98, 0.3)',
+                      },
+                    }}
                   >
                     {loadingMore ? 'Loading...' : 'Load More Careers'}
                   </Button>
@@ -578,7 +646,9 @@ const CareersPage: React.FC = () => {
               )}
             </>
           )}
-    </Box>
+        </Box>
+      </Container>
+    </div>
   );
 };
 
