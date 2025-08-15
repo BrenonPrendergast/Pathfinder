@@ -11,7 +11,7 @@ import {
 } from '../firebase/firestore-base';
 import { CareerRecommendation, SkillProficiencyLevel } from '../types/skill.types';
 import { Career } from '../types/career.types';
-import { onetIntegrationService, CAREER_SOC_MAPPING } from '../onet/onet-integration.service';
+// Removed O*NET integration - using Pathfinder database instead
 import { hardSkillsService } from '../skill/hard-skills.service';
 import { careerService } from '../career/career.service';
 
@@ -142,22 +142,11 @@ export class CareerRecommendationService {
     };
   }
 
-  // Get required skills for a career from multiple sources
+  // Get required skills for a career from Pathfinder database
   private async getCareerRequiredSkills(career: Career): Promise<Array<{skillId: string, requiredLevel: number, isRequired: boolean}>> {
     const skills: Array<{skillId: string, requiredLevel: number, isRequired: boolean}> = [];
     
-    // Try to get O*NET skills first
-    const careerKey = this.normalizeCareerTitle(career.title);
-    if (CAREER_SOC_MAPPING[careerKey as keyof typeof CAREER_SOC_MAPPING]) {
-      const onetSkills = await hardSkillsService.getHardSkillsForCareer(careerKey);
-      skills.push(...onetSkills.map(skill => ({
-        skillId: skill.id,
-        requiredLevel: this.mapSkillLevelToNumber(skill.skillLevel),
-        isRequired: skill.marketDemand > 75
-      })));
-    }
-    
-    // Fallback to career-specific skills if available
+    // Get skills from career's skills array (Pathfinder database)
     if (career.skills && career.skills.length > 0) {
       skills.push(...career.skills.map(skill => ({
         skillId: skill.skillId,

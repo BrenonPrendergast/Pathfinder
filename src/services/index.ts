@@ -35,10 +35,8 @@ export type { QuestRecommendation, RecommendationReason } from './recommendation
 // Skill services
 export { skillService } from './skill/skill.service';
 
-// O*NET Integration services
-export { onetIntegrationService } from './onet/onet-integration.service';
+// Hard Skills services (Pathfinder database)
 export { hardSkillsService } from './skill/hard-skills.service';
-export { CAREER_SOC_MAPPING } from './onet/onet-integration.service';
 
 // Certification services
 export { certificationService } from './certification/certification.service';

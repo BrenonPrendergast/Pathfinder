@@ -38,7 +38,7 @@ export interface BaseSkill {
   type: SkillType;
   prerequisites: string[]; // Array of skill IDs that must be unlocked first
   relatedCareers: string[]; // Career IDs where this skill is relevant
-  onetCode?: string; // O*NET skill code if applicable
+  pathfinderCode?: string; // Pathfinder unique skill code (Firebase document ID)
   estimatedHoursToMaster: number;
   createdAt: Date;
   updatedAt: Date;

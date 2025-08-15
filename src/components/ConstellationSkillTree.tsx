@@ -65,7 +65,7 @@ const ConstellationSkillTree: React.FC<ConstellationSkillTreeProps> = ({
   onSkillSelect,
   onSkillUnlock 
 }) => {
-  const { userProfile } = useAuth();
+  const { userProfile, isAdmin } = useAuth();
   const [nodes, setNodes, onNodesChange] = useNodesState([] as Node[]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([] as Edge[]);
   const [selectedSkill, setSelectedSkill] = useState<string | null>(null);
@@ -350,12 +350,12 @@ const ConstellationSkillTree: React.FC<ConstellationSkillTreeProps> = ({
   );
 
   const onEdgeClick = useCallback((event: React.MouseEvent, edge: Edge) => {
-    if (isDeleteMode) {
+    if (isAdmin() && isDeleteMode) {
       event.stopPropagation();
       setSelectedEdge(edge);
       setDeleteDialogOpen(true);
     }
-  }, [isDeleteMode]);
+  }, [isDeleteMode, isAdmin]);
 
   const handleDeleteConnection = useCallback(() => {
     if (selectedEdge) {
@@ -490,26 +490,6 @@ const ConstellationSkillTree: React.FC<ConstellationSkillTreeProps> = ({
           </IconButton>
         </Tooltip>
 
-        <Tooltip title={isDeleteMode ? "Exit delete mode" : "Delete skill connections"} placement="right">
-          <IconButton
-            onClick={toggleDeleteMode}
-            size="small"
-            sx={{
-              backgroundColor: isDeleteMode ? 'rgba(239, 68, 68, 0.9)' : 'rgba(31, 41, 55, 0.9)',
-              color: 'white',
-              border: isDeleteMode ? '1px solid rgba(239, 68, 68, 0.8)' : '1px solid rgba(99, 102, 241, 0.5)',
-              width: 36,
-              height: 36,
-              '&:hover': {
-                backgroundColor: isDeleteMode ? 'rgba(239, 68, 68, 1)' : 'rgba(239, 68, 68, 0.3)',
-                transform: 'scale(1.05)',
-              },
-              transition: 'all 0.2s ease',
-            }}
-          >
-            <Trash2 size={18} />
-          </IconButton>
-        </Tooltip>
 
         <Tooltip title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"} placement="right">
           <IconButton
@@ -567,21 +547,6 @@ const ConstellationSkillTree: React.FC<ConstellationSkillTreeProps> = ({
           }}
         />
 
-        {isDeleteMode && (
-          <Chip 
-            label="Delete Mode"
-            size="small"
-            sx={{ 
-              backgroundColor: 'rgba(239, 68, 68, 0.9)', 
-              color: 'white',
-              fontWeight: 600,
-              fontSize: '0.7rem',
-              height: 24,
-              animation: 'pulse 2s infinite',
-              '& .MuiChip-label': { px: 1 }
-            }}
-          />
-        )}
       </Box>
 
       {/* Selected Skill Details - Fixed Top Right */}
@@ -751,7 +716,7 @@ const ConstellationSkillTree: React.FC<ConstellationSkillTreeProps> = ({
         defaultViewport={{ x: 0, y: 0, zoom: 1 }}
         style={{
           background: 'radial-gradient(ellipse at center, #1a1a2e 0%, #0f0f15 100%)',
-          cursor: isDeleteMode ? 'crosshair' : 'default',
+          cursor: (isAdmin() && isDeleteMode) ? 'crosshair' : 'default',
         }}
       >
         <Controls 
@@ -772,18 +737,19 @@ const ConstellationSkillTree: React.FC<ConstellationSkillTreeProps> = ({
         />
       </ReactFlow>
 
-      {/* Delete Connection Confirmation Dialog */}
-      <Dialog
-        open={deleteDialogOpen}
-        onClose={() => setDeleteDialogOpen(false)}
-        PaperProps={{
-          sx: {
-            background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.95), transparent)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(99, 102, 241, 0.3)',
-          }
-        }}
-      >
+      {/* Delete Connection Confirmation Dialog - Admin Only */}
+      {isAdmin() && (
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+          PaperProps={{
+            sx: {
+              background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.95), transparent)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(99, 102, 241, 0.3)',
+            }
+          }}
+        >
         <DialogTitle sx={{ color: '#ef4444' }}>
           Delete Connection
         </DialogTitle>
@@ -818,7 +784,8 @@ const ConstellationSkillTree: React.FC<ConstellationSkillTreeProps> = ({
             Delete
           </Button>
         </DialogActions>
-      </Dialog>
+        </Dialog>
+      )}
     </Box>
   );
 };

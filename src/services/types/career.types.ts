@@ -13,7 +13,7 @@ export interface Career {
   id: string;
   title: string;
   description: string;
-  onetCode: string; // O*NET SOC code like "15-1252.00"
+  pathfinderCode?: string; // Pathfinder unique career code (Firebase document ID)
   skills: CareerSkill[];
   difficulty: 'beginner' | 'intermediate' | 'advanced';
   estimatedTimeToMaster: number; // in months

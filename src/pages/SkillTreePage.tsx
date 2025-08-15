@@ -284,7 +284,7 @@ const SkillTreePage: React.FC = () => {
       <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 10 }}>
         <Box sx={{ py: { xs: 2, md: 3 } }}>
 
-          {/* Admin Controls - Compact Top Right */}
+          {/* Admin Controls - Compact Horizontal Layout */}
           {isAdmin() && (
             <Box sx={{
               position: 'absolute',
@@ -292,15 +292,14 @@ const SkillTreePage: React.FC = () => {
               right: 8,
               zIndex: 1000,
               display: 'flex',
-              flexDirection: adminEditMode ? 'column' : 'row',
+              alignItems: 'center',
               gap: 1,
-              p: adminEditMode ? 1.5 : 1,
+              p: 0.5,
               backgroundColor: 'rgba(31, 41, 55, 0.95)',
               backdropFilter: 'blur(10px)',
               border: '1px solid rgba(99, 102, 241, 0.3)',
               borderRadius: 1,
-              minWidth: adminEditMode ? 240 : 'auto',
-              alignItems: adminEditMode ? 'stretch' : 'center',
+              maxWidth: adminEditMode ? '540px' : 'auto',
             }}>
               {/* Admin Toggle */}
               <FormControlLabel
@@ -322,26 +321,29 @@ const SkillTreePage: React.FC = () => {
                     }}
                   />
                 }
-                label={adminEditMode ? "Admin Mode" : "Admin"}
+                label={adminEditMode ? "Admin" : "Admin"}
                 sx={{ 
                   color: adminEditMode ? '#ef4444' : 'white',
                   fontWeight: adminEditMode ? 600 : 'normal',
-                  fontSize: '0.8rem',
+                  fontSize: '0.75rem',
                   margin: 0,
                   minWidth: 'auto',
+                  '& .MuiFormControlLabel-label': {
+                    fontSize: '0.75rem',
+                  },
                 }}
               />
 
-              {/* Admin Search & Dropdown - Only show when in edit mode */}
+              {/* Admin Search & Dropdown - Side by Side when in edit mode */}
               {adminEditMode && (
                 <>
                   <TextField
                     size="small"
-                    placeholder={`Search careers...`}
+                    placeholder="Search..."
                     value={careerSearchTerm}
                     onChange={(e) => setCareerSearchTerm(e.target.value)}
                     sx={{
-                      minWidth: 160,
+                      width: 120,
                       '& .MuiOutlinedInput-root': {
                         backgroundColor: 'rgba(255, 255, 255, 0.1)',
                         height: 32,
@@ -356,15 +358,15 @@ const SkillTreePage: React.FC = () => {
                         },
                         '& input': {
                           color: 'white',
-                          fontSize: '0.75rem',
+                          fontSize: '0.7rem',
                           py: 0.5,
                         },
                       },
                     }}
                   />
                   
-                  <FormControl size="small" sx={{ minWidth: 160 }}>
-                    <InputLabel sx={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.75rem' }}>
+                  <FormControl size="small" sx={{ minWidth: 140 }}>
+                    <InputLabel sx={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.7rem' }}>
                       {loadingCareers ? 'Loading...' : 'Career'}
                     </InputLabel>
                     <Select
@@ -375,7 +377,7 @@ const SkillTreePage: React.FC = () => {
                       sx={{
                         backgroundColor: 'rgba(255, 255, 255, 0.1)',
                         color: 'white',
-                        fontSize: '0.75rem',
+                        fontSize: '0.7rem',
                         height: 32,
                         '& .MuiOutlinedInput-notchedOutline': {
                           borderColor: 'rgba(99, 102, 241, 0.5)',
@@ -401,11 +403,11 @@ const SkillTreePage: React.FC = () => {
                       }}
                     >
                       {adminCareerOptions.map((career) => (
-                        <MenuItem key={career.id} value={career.id} sx={{ color: 'white', fontSize: '0.85rem' }}>
+                        <MenuItem key={career.id} value={career.id} sx={{ color: 'white', fontSize: '0.7rem' }}>
                           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                            {career.icon}
-                            <Typography sx={{ fontWeight: career.id === 'general' ? 600 : 400, fontSize: '0.85rem' }}>
-                              {career.name}
+                            <Box sx={{ fontSize: '0.7rem' }}>{career.icon}</Box>
+                            <Typography sx={{ fontWeight: career.id === 'general' ? 600 : 400, fontSize: '0.7rem' }}>
+                              {career.name.length > 15 ? `${career.name.slice(0, 15)}...` : career.name}
                             </Typography>
                           </Box>
                         </MenuItem>
@@ -417,20 +419,35 @@ const SkillTreePage: React.FC = () => {
             </Box>
           )}
       
-          {/* Career Path Tabs */}
+          {/* Career Path Tabs - Compact Top Left */}
           {availableSkillPaths.length > 1 ? (
-            <Box sx={{ mb: 3 }}>
+            <Box sx={{ 
+              position: 'absolute',
+              top: 8,
+              left: 8,
+              zIndex: 100,
+              backgroundColor: 'rgba(31, 41, 55, 0.95)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(99, 102, 241, 0.3)',
+              borderRadius: 1,
+              p: 0.5,
+              maxWidth: '320px',
+            }}>
               <Tabs 
                 value={tabValue} 
                 onChange={handleTabChange} 
-                variant="fullWidth"
+                variant="scrollable"
+                scrollButtons="auto"
                 sx={{
+                  minHeight: 32,
                   '& .MuiTab-root': {
                     fontFamily: '"Nacelle", sans-serif',
                     fontWeight: 600,
                     textTransform: 'none',
-                    fontSize: '0.9rem',
-                    color: 'text.secondary',
+                    fontSize: '0.75rem',
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    minHeight: 32,
+                    padding: '4px 8px',
                     '&.Mui-selected': {
                       color: '#6366f1',
                     },
@@ -438,30 +455,34 @@ const SkillTreePage: React.FC = () => {
                   '& .MuiTabs-indicator': {
                     backgroundColor: '#6366f1',
                   },
+                  '& .MuiTabs-scrollButtons': {
+                    color: 'rgba(255, 255, 255, 0.7)',
+                    '&.Mui-disabled': {
+                      opacity: 0.3,
+                    },
+                  },
                 }}
               >
                 {availableSkillPaths.map((path, index) => (
                   <Tab
                     key={path.id}
                     label={
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        {path.name}
+                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        <Box sx={{ fontSize: '0.8rem', lineHeight: 1 }}>{path.icon}</Box>
+                        <Typography sx={{ fontSize: '0.7rem', fontWeight: 600 }}>
+                          {path.name.length > 12 ? `${path.name.slice(0, 12)}...` : path.name}
+                        </Typography>
                         {path.isActive && (
-                          <Chip
-                            label="Active"
-                            size="small"
-                            sx={{ 
-                              fontSize: '0.6rem', 
-                              height: 20,
-                              backgroundColor: '#00B162',
-                              color: 'white',
-                            }}
-                          />
+                          <Box sx={{ 
+                            width: 6, 
+                            height: 6, 
+                            borderRadius: '50%',
+                            backgroundColor: '#00B162',
+                            ml: 0.5
+                          }} />
                         )}
                       </Box>
                     }
-                    icon={<>{path.icon}</>}
-                    iconPosition="start"
                   />
                 ))}
               </Tabs>
@@ -497,31 +518,36 @@ const SkillTreePage: React.FC = () => {
           )}
 
           {/* Skill Trees */}
-          {adminEditMode ? (
-            // Admin constellation editor
-            <AdminConstellationEditor
-              careerPath={adminSelectedCareer}
-              careerName={getAdminCareerName()}
-              adminEditMode={adminEditMode}
-              onManualSave={(nodes, edges) => {
-                console.log('Admin manually saved changes:', nodes, edges);
-                setAdminEditMode(false);
-              }}
-              onCancel={() => setAdminEditMode(false)}
-            />
-          ) : (
-            // Use constellation-style skill tree (now the standard view)
-            <ConstellationSkillTree 
-              careerPath={availableSkillPaths[tabValue]?.id || 'general'}
-              careerName={availableSkillPaths[tabValue]?.name}
-              onSkillSelect={(skillId) => {
-                console.log(`Selected skill: ${skillId}`);
-              }}
-              onSkillUnlock={(skillId) => {
-                console.log(`Skill ${skillId} unlocked!`);
-              }}
-            />
-          )}
+          <Box sx={{ 
+            mt: availableSkillPaths.length > 1 ? 6 : 0, // Add margin when tabs are present
+            position: 'relative'
+          }}>
+            {adminEditMode ? (
+              // Admin constellation editor
+              <AdminConstellationEditor
+                careerPath={adminSelectedCareer}
+                careerName={getAdminCareerName()}
+                adminEditMode={adminEditMode}
+                onManualSave={(nodes, edges) => {
+                  console.log('Admin manually saved changes:', nodes, edges);
+                  setAdminEditMode(false);
+                }}
+                onCancel={() => setAdminEditMode(false)}
+              />
+            ) : (
+              // Use constellation-style skill tree (now the standard view)
+              <ConstellationSkillTree 
+                careerPath={availableSkillPaths[tabValue]?.id || 'general'}
+                careerName={availableSkillPaths[tabValue]?.name}
+                onSkillSelect={(skillId) => {
+                  console.log(`Selected skill: ${skillId}`);
+                }}
+                onSkillUnlock={(skillId) => {
+                  console.log(`Skill ${skillId} unlocked!`);
+                }}
+              />
+            )}
+          </Box>
         </Box>
       </Container>
     </div>

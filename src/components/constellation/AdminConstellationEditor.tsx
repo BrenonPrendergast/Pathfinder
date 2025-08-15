@@ -23,7 +23,6 @@ import {
   Typography,
   Button,
   Paper,
-  Drawer,
   TextField,
   FormControl,
   InputLabel,
@@ -51,8 +50,6 @@ import {
   Upload,
   Download,
   Settings,
-  Visibility,
-  VisibilityOff,
   Link,
   LinkOff,
   Grid3x3,
@@ -122,7 +119,6 @@ const AdminConstellationEditor: React.FC<AdminConstellationEditorProps> = ({
   const [selectedNodes, setSelectedNodes] = useState<Node[]>([]);
   const [selectedEdges, setSelectedEdges] = useState<Edge[]>([]);
   const [editingNode, setEditingNode] = useState<SkillEditData | null>(null);
-  const [showPropertyPanel, setShowPropertyPanel] = useState(true);
   const [isConnectingMode, setIsConnectingMode] = useState(false);
   const [undoStack, setUndoStack] = useState<{nodes: Node[], edges: Edge[]}[]>([]);
   const [redoStack, setRedoStack] = useState<{nodes: Node[], edges: Edge[]}[]>([]);
@@ -1167,14 +1163,6 @@ const AdminConstellationEditor: React.FC<AdminConstellationEditorProps> = ({
 
         <Divider sx={{ width: '100%', bgcolor: 'rgba(99, 102, 241, 0.3)' }} />
 
-        <Tooltip title="Toggle Property Panel">
-          <IconButton onClick={() => setShowPropertyPanel(!showPropertyPanel)} size="small">
-            {showPropertyPanel ? <VisibilityOff /> : <Visibility />}
-          </IconButton>
-        </Tooltip>
-
-        <Divider sx={{ width: '100%', bgcolor: 'rgba(99, 102, 241, 0.3)' }} />
-
         <Tooltip title={isAutoSaving ? "Auto-saving..." : "Save Changes"}>
           <IconButton 
             onClick={handleSaveChanges}
@@ -1305,89 +1293,120 @@ const AdminConstellationEditor: React.FC<AdminConstellationEditorProps> = ({
         </Paper>
       )}
 
-      {/* Property Panel */}
-      <Drawer
-        anchor="right"
-        open={showPropertyPanel}
-        variant="persistent"
-        sx={{
-          '& .MuiDrawer-paper': {
-            width: 240, // Reduced from 320 to 240
-            background: 'rgba(31, 41, 55, 0.95)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(99, 102, 241, 0.3)',
-          },
-        }}
-      >
-        <Box sx={{ p: 2 }}>
-          <Typography variant="h6" gutterBottom>
-            Constellation Editor
-          </Typography>
-          
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Career Path: {careerName || careerPath}
-          </Typography>
+      {/* Floating Action Bar */}
+      <Box sx={{
+        position: 'absolute',
+        bottom: 16,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        zIndex: 1000,
+        display: 'flex',
+        alignItems: 'center',
+        gap: { xs: 1, sm: 2 },
+        p: { xs: 1, sm: 1.5 },
+        backgroundColor: 'rgba(31, 41, 55, 0.95)',
+        backdropFilter: 'blur(10px)',
+        border: '1px solid rgba(99, 102, 241, 0.3)',
+        borderRadius: 2,
+        maxWidth: '95vw',
+        flexWrap: 'wrap',
+        justifyContent: 'center',
+        flexDirection: { xs: 'column', md: 'row' },
+      }}>
+        {/* Statistics Section */}
+        <Box sx={{ 
+          display: 'flex', 
+          gap: 0.5, 
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+        }}>
+          <Chip label={`${nodes.length} Skills`} size="small" sx={{ backgroundColor: '#6366f1', color: 'white', fontSize: '0.7rem' }} />
+          <Chip label={`${edges.length} Connections`} size="small" sx={{ backgroundColor: '#00B162', color: 'white', fontSize: '0.7rem' }} />
+          <Chip label={`Grid: ${gridSize}px`} size="small" sx={{ backgroundColor: 'rgba(99, 102, 241, 0.3)', color: 'white', fontSize: '0.7rem' }} />
+          <Chip 
+            label={`Scale: ${Math.round(nodeScale * 100)}%`} 
+            size="small" 
+            sx={{ backgroundColor: nodeScale !== 1 ? '#f59e0b' : 'rgba(107, 114, 128, 0.5)', color: 'white', fontSize: '0.7rem' }} 
+          />
+          <Chip 
+            label={`Text: ${Math.round(textScale * 100)}%`} 
+            size="small" 
+            sx={{ backgroundColor: textScale !== 1 ? '#10b981' : 'rgba(107, 114, 128, 0.5)', color: 'white', fontSize: '0.7rem' }} 
+          />
+        </Box>
 
-          <Box sx={{ mb: 2 }}>
-            <Typography variant="subtitle2" gutterBottom>
-              Statistics
-            </Typography>
-            <Chip label={`${nodes.length} Skills`} size="small" sx={{ mr: 1, mb: 1 }} />
-            <Chip label={`${edges.length} Connections`} size="small" sx={{ mr: 1, mb: 1 }} />
-            <Chip label={`Grid: ${gridSize}px`} size="small" sx={{ mr: 1, mb: 1, backgroundColor: 'rgba(99, 102, 241, 0.2)' }} />
-            <Chip 
-              label={`Scale: ${Math.round(nodeScale * 100)}%`} 
-              size="small" 
-              sx={{ mr: 1, mb: 1 }} 
-            />
-            <Chip 
-              label={`Text: ${Math.round(textScale * 100)}%`} 
-              size="small" 
-              sx={{ mr: 1, mb: 1, backgroundColor: textScale !== 1 ? 'rgba(0, 177, 98, 0.2)' : 'inherit' }} 
-            />
-          </Box>
+        {/* Vertical Divider */}
+        <Box sx={{ 
+          width: 1, 
+          height: 24, 
+          backgroundColor: 'rgba(99, 102, 241, 0.3)',
+          display: { xs: 'none', sm: 'block' }
+        }} />
+
+        {/* Quick Actions */}
+        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+          <Tooltip title="Add New Skill">
+            <IconButton
+              size="small"
+              onClick={handleCreateNode}
+              sx={{
+                backgroundColor: 'rgba(0, 177, 98, 0.8)',
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: '#009654',
+                  transform: 'scale(1.05)',
+                },
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <Add />
+            </IconButton>
+          </Tooltip>
+
+          <Tooltip title="Auto Arrange Skills">
+            <IconButton
+              size="small"
+              sx={{
+                backgroundColor: 'rgba(99, 102, 241, 0.8)',
+                color: 'white',
+                '&:hover': {
+                  backgroundColor: '#5b5fc7',
+                  transform: 'scale(1.05)',
+                },
+                transition: 'all 0.2s ease',
+              }}
+            >
+              <Grid3x3 />
+            </IconButton>
+          </Tooltip>
 
           {selectedNodes.length === 1 && (
-            <Box>
-              <Typography variant="subtitle2" gutterBottom>
-                Selected Skill
-              </Typography>
-              <Button
-                fullWidth
-                variant="outlined"
-                startIcon={<Edit />}
+            <Tooltip title="Edit Selected Skill">
+              <IconButton
+                size="small"
                 onClick={() => handleNodeEdit(selectedNodes[0].data)}
-                sx={{ mb: 2 }}
+                sx={{
+                  backgroundColor: 'rgba(245, 158, 11, 0.8)',
+                  color: 'white',
+                  '&:hover': {
+                    backgroundColor: '#d97706',
+                    transform: 'scale(1.05)',
+                  },
+                  transition: 'all 0.2s ease',
+                  animation: 'pulse 2s infinite',
+                  '@keyframes pulse': {
+                    '0%, 100%': { opacity: 0.8 },
+                    '50%': { opacity: 1 },
+                  },
+                }}
               >
-                Edit Skill Properties
-              </Button>
-            </Box>
+                <Edit />
+              </IconButton>
+            </Tooltip>
           )}
-
-          <Box sx={{ mt: 2 }}>
-            <Typography variant="subtitle2" gutterBottom>
-              Quick Actions
-            </Typography>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<Add />}
-              onClick={handleCreateNode}
-              sx={{ mb: 1 }}
-            >
-              Add New Skill
-            </Button>
-            <Button
-              fullWidth
-              variant="outlined"
-              startIcon={<Grid3x3 />}
-              sx={{ mb: 1 }}
-            >
-              Auto Arrange
-            </Button>
-          </Box>
         </Box>
-      </Drawer>
+      </Box>
 
       {/* Node Edit Dialog */}
       <Dialog

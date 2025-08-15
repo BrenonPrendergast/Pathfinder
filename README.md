@@ -21,15 +21,19 @@ A gamified career development platform that transforms professional growth into 
 ### 🎮 Gamified Learning
 - **Quest System**: Structured learning paths with XP rewards
 - **Achievement System**: Unlock badges and milestones
-- **Skill Constellations**: Interactive star-map style skill trees with template-based architecture
+- **Skill Constellations**: Interactive star-map style skill trees with optimized UI/UX
 - **Template-Based Skills**: Admin-created constellation templates for each career path
+- **Role-Based Interface**: Clean, safe interface for learners; full editing capabilities for admins
+- **Space-Optimized Design**: Compact controls and floating action bars for maximum skill tree visibility
 - **Level Progression**: Logarithmic XP system with visual progress tracking
 
 ### 👥 Admin Management
 - **Role-Based Access**: User, admin, and super_admin permissions
 - **Content Management**: Create and manage careers, quests, achievements
-- **Constellation Editor**: Admin-only interface for creating and editing skill tree templates
+- **Constellation Editor**: Admin-only interface with floating action bar and compact controls
 - **Template Management**: Design career-specific and general skill constellations
+- **Optimized Workflow**: Space-efficient admin tools that don't interfere with skill tree editing
+- **Secure Operations**: Connection editing and template management restricted to admin users
 - **User Analytics**: Engagement metrics and progress tracking
 - **CSV Import/Export**: Bulk data management tools
 

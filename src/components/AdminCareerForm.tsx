@@ -45,7 +45,7 @@ const AdminCareerForm: React.FC<AdminCareerFormProps> = ({
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    onetCode: '',
+    pathfinderCode: '',
     difficulty: 'intermediate' as 'beginner' | 'intermediate' | 'advanced',
     estimatedTimeToMaster: 24,
     jobOutlook: '',
@@ -92,7 +92,7 @@ const AdminCareerForm: React.FC<AdminCareerFormProps> = ({
       setFormData({
         title: career.title,
         description: career.description,
-        onetCode: career.onetCode,
+        pathfinderCode: career.id, // Use the document ID as the Pathfinder code
         difficulty: career.difficulty,
         estimatedTimeToMaster: career.estimatedTimeToMaster,
         jobOutlook: career.jobOutlook || '',
@@ -106,7 +106,7 @@ const AdminCareerForm: React.FC<AdminCareerFormProps> = ({
       setFormData({
         title: '',
         description: '',
-        onetCode: '',
+        pathfinderCode: '',
         difficulty: 'intermediate',
         estimatedTimeToMaster: 24,
         jobOutlook: '',
@@ -218,7 +218,6 @@ const AdminCareerForm: React.FC<AdminCareerFormProps> = ({
       careerData = {
         title: formData.title.trim(),
         description: formData.description.trim(),
-        onetCode: formData.onetCode.trim(),
         difficulty: formData.difficulty,
         estimatedTimeToMaster: formData.estimatedTimeToMaster,
         jobOutlook: formData.jobOutlook.trim() || undefined,
@@ -229,8 +228,11 @@ const AdminCareerForm: React.FC<AdminCareerFormProps> = ({
       };
 
       if (career) {
-        // Update existing career
-        await careerService.updateCareer(career.id, careerData);
+        // Update existing career (pathfinderCode stays as document ID)
+        await careerService.updateCareer(career.id, {
+          ...careerData,
+          pathfinderCode: career.id, // Ensure pathfinderCode matches document ID
+        });
         
         // Clean up legacy field property if it exists
         if ((career as any).field && !career.fields) {
@@ -238,7 +240,12 @@ const AdminCareerForm: React.FC<AdminCareerFormProps> = ({
         }
       } else {
         // Create new career
-        await careerService.createCareer(careerData);
+        const newCareerId = await careerService.createCareer(careerData);
+        
+        // Update the pathfinderCode to match the document ID
+        await careerService.updateCareer(newCareerId, {
+          pathfinderCode: newCareerId
+        });
       }
 
       onSave();
@@ -315,10 +322,18 @@ const AdminCareerForm: React.FC<AdminCareerFormProps> = ({
           <Grid item xs={6}>
             <TextField
               fullWidth
-              label="O*NET Code"
-              value={formData.onetCode}
-              onChange={(e) => handleInputChange('onetCode', e.target.value)}
-              placeholder="e.g., 15-1252.00"
+              label="Pathfinder Code"
+              value={career ? career.id : 'Auto-generated on save'}
+              InputProps={{
+                readOnly: true,
+              }}
+              helperText="Unique identifier from database (read-only)"
+              sx={{
+                '& .MuiInputBase-input': {
+                  backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                  fontFamily: 'monospace',
+                },
+              }}
             />
           </Grid>
 

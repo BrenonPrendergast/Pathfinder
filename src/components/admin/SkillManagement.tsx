@@ -47,9 +47,10 @@ import {
 import { 
   skillService, 
   hardSkillsService, 
-  onetIntegrationService,
-  certificationService 
+  certificationService,
+  careerService 
 } from '../../services';
+import type { Career, CareerSkill } from '../../services/types';
 import { SkillType, SkillCategory, SkillProficiencyLevel } from '../../services/types/skill.types';
 
 interface SkillManagementProps {}
@@ -57,6 +58,9 @@ interface SkillManagementProps {}
 const SkillManagement: React.FC<SkillManagementProps> = () => {
   // State management
   const [tabValue, setTabValue] = useState(0);
+  const [careers, setCareers] = useState<Career[]>([]);
+  const [selectedCareer, setSelectedCareer] = useState<Career | null>(null);
+  const [careerSkills, setCareerSkills] = useState<CareerSkill[]>([]);
   const [softSkills, setSoftSkills] = useState<any[]>([]);
   const [hardSkills, setHardSkills] = useState<any[]>([]);
   const [certifications, setCertifications] = useState<any[]>([]);
@@ -80,13 +84,17 @@ const SkillManagement: React.FC<SkillManagementProps> = () => {
     type: SkillType.HARD,
     prerequisites: [] as string[],
     relatedCareers: [] as string[],
-    onetCode: '',
+    pathfinderCode: '',
     estimatedHoursToMaster: 40,
+    // Career-specific fields
+    proficiencyLevel: 3,
+    isRequired: true,
   });
 
   // Load skills data
   useEffect(() => {
     loadSkillsData();
+    loadCareers();
   }, []);
 
   const loadSkillsData = async () => {
@@ -97,7 +105,7 @@ const SkillManagement: React.FC<SkillManagementProps> = () => {
       const softSkillsData = await skillService.getAllSoftSkills();
       setSoftSkills(softSkillsData);
       
-      // Load hard skills (O*NET based)
+      // Load hard skills (Pathfinder database)
       let hardSkillsData = await hardSkillsService.getAllHardSkills();
       
       // Auto-seed hard skills if empty
@@ -147,6 +155,109 @@ const SkillManagement: React.FC<SkillManagementProps> = () => {
     }
   };
 
+  // Load careers for career-skill association management
+  const loadCareers = async () => {
+    try {
+      const response = await careerService.getCareers(1000); // Get all careers
+      setCareers(response.careers);
+    } catch (error) {
+      console.error('Error loading careers:', error);
+    }
+  };
+
+  // Load skills for selected career
+  const loadCareerSkills = async (career: Career) => {
+    try {
+      setSelectedCareer(career);
+      setCareerSkills(career.skills || []);
+    } catch (error) {
+      console.error('Error loading career skills:', error);
+    }
+  };
+
+  // Add skill to career
+  const handleAddSkillToCareer = async (skillData: CareerSkill) => {
+    if (!selectedCareer) return;
+    
+    try {
+      const updatedSkills = [...careerSkills, skillData];
+      await careerService.updateCareer(selectedCareer.id, {
+        skills: updatedSkills
+      });
+      setCareerSkills(updatedSkills);
+      
+      // Update local career state
+      setCareers(prev => prev.map(c => 
+        c.id === selectedCareer.id 
+          ? { ...c, skills: updatedSkills }
+          : c
+      ));
+      
+      setCsvStatus('Successfully added skill to career!');
+      setTimeout(() => setCsvStatus(''), 3000);
+    } catch (error) {
+      console.error('Error adding skill to career:', error);
+      setCsvStatus('Failed to add skill to career.');
+      setTimeout(() => setCsvStatus(''), 3000);
+    }
+  };
+
+  // Remove skill from career
+  const handleRemoveSkillFromCareer = async (skillIndex: number) => {
+    if (!selectedCareer) return;
+    
+    try {
+      const updatedSkills = careerSkills.filter((_, index) => index !== skillIndex);
+      await careerService.updateCareer(selectedCareer.id, {
+        skills: updatedSkills
+      });
+      setCareerSkills(updatedSkills);
+      
+      // Update local career state
+      setCareers(prev => prev.map(c => 
+        c.id === selectedCareer.id 
+          ? { ...c, skills: updatedSkills }
+          : c
+      ));
+      
+      setCsvStatus('Successfully removed skill from career!');
+      setTimeout(() => setCsvStatus(''), 3000);
+    } catch (error) {
+      console.error('Error removing skill from career:', error);
+      setCsvStatus('Failed to remove skill from career.');
+      setTimeout(() => setCsvStatus(''), 3000);
+    }
+  };
+
+  // Update skill in career
+  const handleUpdateCareerSkill = async (skillIndex: number, updatedSkill: CareerSkill) => {
+    if (!selectedCareer) return;
+    
+    try {
+      const updatedSkills = careerSkills.map((skill, index) => 
+        index === skillIndex ? updatedSkill : skill
+      );
+      await careerService.updateCareer(selectedCareer.id, {
+        skills: updatedSkills
+      });
+      setCareerSkills(updatedSkills);
+      
+      // Update local career state
+      setCareers(prev => prev.map(c => 
+        c.id === selectedCareer.id 
+          ? { ...c, skills: updatedSkills }
+          : c
+      ));
+      
+      setCsvStatus('Successfully updated skill in career!');
+      setTimeout(() => setCsvStatus(''), 3000);
+    } catch (error) {
+      console.error('Error updating career skill:', error);
+      setCsvStatus('Failed to update skill in career.');
+      setTimeout(() => setCsvStatus(''), 3000);
+    }
+  };
+
   // Handle tab change
   const handleTabChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabValue(newValue);
@@ -164,15 +275,35 @@ const SkillManagement: React.FC<SkillManagementProps> = () => {
           await skillService.createSoftSkill(skillForm);
         }
       } else if (tabValue === 1) {
-        // Hard skills - Note: O*NET skills are read-only, but we can create custom ones
+        // Hard skills - Create custom hard skills for your Pathfinder database
         if (editingSkill) {
           await skillService.updateHardSkill(editingSkill.id, skillForm);
         } else {
           await skillService.createHardSkill(skillForm);
         }
+      } else if (tabValue === 3 && selectedCareer) {
+        // Career skills
+        const careerSkill: CareerSkill = {
+          skillId: skillForm.name.toLowerCase().replace(/\s+/g, '_'),
+          skillName: skillForm.name,
+          skillType: skillForm.type === SkillType.SOFT ? 'soft' : skillForm.type === SkillType.HARD ? 'hard' : 'transferable',
+          proficiencyLevel: skillForm.proficiencyLevel,
+          isRequired: skillForm.isRequired,
+          estimatedHours: skillForm.estimatedHoursToMaster,
+        };
+        
+        if (editingSkill && typeof editingSkill.index === 'number') {
+          // Update existing skill
+          await handleUpdateCareerSkill(editingSkill.index, careerSkill);
+        } else {
+          // Add new skill
+          await handleAddSkillToCareer(careerSkill);
+        }
       }
       
-      await loadSkillsData();
+      if (tabValue !== 3) {
+        await loadSkillsData();
+      }
       handleFormClose();
     } catch (error) {
       console.error('Error saving skill:', error);
@@ -194,9 +325,14 @@ const SkillManagement: React.FC<SkillManagementProps> = () => {
           await skillService.deleteHardSkill(skillToDelete.id);
         } else if (tabValue === 2) {
           await certificationService.removeUserCertification('admin', skillToDelete.id);
+        } else if (tabValue === 3 && typeof skillToDelete.index === 'number') {
+          // Remove skill from career
+          await handleRemoveSkillFromCareer(skillToDelete.index);
         }
         
-        await loadSkillsData();
+        if (tabValue !== 3) {
+          await loadSkillsData();
+        }
         setDeleteConfirmOpen(false);
         setSkillToDelete(null);
       } catch (error) {
@@ -215,8 +351,10 @@ const SkillManagement: React.FC<SkillManagementProps> = () => {
       type: skill.type || SkillType.HARD,
       prerequisites: skill.prerequisites || [],
       relatedCareers: skill.relatedCareers || [],
-      onetCode: skill.onetCode || '',
+      pathfinderCode: skill.pathfinderCode || '',
       estimatedHoursToMaster: skill.estimatedHoursToMaster || 40,
+      proficiencyLevel: skill.proficiencyLevel || 3,
+      isRequired: skill.isRequired !== undefined ? skill.isRequired : true,
     });
     setSkillFormOpen(true);
   };
@@ -232,8 +370,10 @@ const SkillManagement: React.FC<SkillManagementProps> = () => {
       type: SkillType.HARD,
       prerequisites: [],
       relatedCareers: [],
-      onetCode: '',
+      pathfinderCode: '',
       estimatedHoursToMaster: 40,
+      proficiencyLevel: 3,
+      isRequired: true,
     });
   };
 
@@ -304,9 +444,9 @@ const SkillManagement: React.FC<SkillManagementProps> = () => {
       setSeeding(true);
       
       if (tabValue === 1) {
-        setSeedingStatus('Seeding O*NET hard skills database...');
+        setSeedingStatus('Seeding Pathfinder hard skills database...');
         await hardSkillsService.seedHardSkills();
-        setSeedingStatus('Successfully seeded O*NET hard skills!');
+        setSeedingStatus('Successfully seeded Pathfinder hard skills!');
       } else if (tabValue === 2) {
         setSeedingStatus('Seeding professional certifications database...');
         await certificationService.seedCertifications();
@@ -355,6 +495,302 @@ const SkillManagement: React.FC<SkillManagementProps> = () => {
     }
   };
 
+  // Render career skills management
+  const renderCareerSkillsManagement = () => {
+    return (
+      <Grid container spacing={3} sx={{ minHeight: '600px' }}>
+        {/* Career Selection */}
+        <Grid item xs={12} md={4}>
+          <Card sx={{ 
+            height: '100%', 
+            background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.3), transparent)',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            <CardContent sx={{ 
+              flexGrow: 1, 
+              display: 'flex', 
+              flexDirection: 'column',
+              pb: 1
+            }}>
+              <Typography variant="h6" gutterBottom sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <TrendingUp />
+                Select Career
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Choose a career to view and manage its skills
+              </Typography>
+              
+              <TextField
+                fullWidth
+                placeholder="Search careers..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                sx={{ mb: 2 }}
+              />
+              
+              <Box sx={{ 
+                flexGrow: 1, 
+                overflow: 'auto',
+                minHeight: 0, // Important for flexbox scrolling
+                '&::-webkit-scrollbar': {
+                  width: '8px',
+                },
+                '&::-webkit-scrollbar-track': {
+                  backgroundColor: 'rgba(0,0,0,0.1)',
+                  borderRadius: '4px',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  backgroundColor: 'rgba(0,0,0,0.3)',
+                  borderRadius: '4px',
+                  '&:hover': {
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                  },
+                },
+              }}>
+                {careers
+                  .filter(career => 
+                    career.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    career.description.toLowerCase().includes(searchTerm.toLowerCase())
+                  )
+                  .map((career) => (
+                    <Card 
+                      key={career.id}
+                      sx={{ 
+                        mb: 1, 
+                        cursor: 'pointer',
+                        border: selectedCareer?.id === career.id ? 2 : 1,
+                        borderColor: selectedCareer?.id === career.id ? 'primary.main' : 'divider',
+                        '&:hover': {
+                          backgroundColor: 'action.hover',
+                        }
+                      }}
+                      onClick={() => loadCareerSkills(career)}
+                    >
+                      <CardContent sx={{ py: 1.5 }}>
+                        <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                          {career.title}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {career.skills?.length || 0} skills • {career.difficulty}
+                        </Typography>
+                      </CardContent>
+                    </Card>
+                  ))
+                }
+              </Box>
+            </CardContent>
+          </Card>
+        </Grid>
+
+        {/* Skills Management */}
+        <Grid item xs={12} md={8}>
+          <Card sx={{ 
+            height: '100%',
+            background: 'linear-gradient(to right, transparent, rgba(31, 41, 55, 0.3), transparent)',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            <CardContent sx={{ 
+              flexGrow: 1, 
+              display: 'flex', 
+              flexDirection: 'column'
+            }}>
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+                <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <Assessment />
+                  {selectedCareer ? `${selectedCareer.title} Skills` : 'Career Skills'}
+                </Typography>
+                {selectedCareer && (
+                  <Button
+                    variant="contained"
+                    startIcon={<AddIcon />}
+                    onClick={() => {
+                      // Open dialog to add new skill
+                      setSkillForm({
+                        name: '',
+                        description: '',
+                        category: SkillCategory.TECHNICAL,
+                        type: SkillType.HARD,
+                        prerequisites: [],
+                        relatedCareers: [selectedCareer.id],
+                        pathfinderCode: '',
+                        estimatedHoursToMaster: 40,
+                        proficiencyLevel: 3,
+                        isRequired: true,
+                      });
+                      setSkillFormOpen(true);
+                    }}
+                    sx={{
+                      backgroundColor: '#00B162',
+                      '&:hover': {
+                        backgroundColor: '#009654',
+                      },
+                    }}
+                  >
+                    Add Skill
+                  </Button>
+                )}
+              </Box>
+
+              {!selectedCareer ? (
+                <Box sx={{ textAlign: 'center', py: 6 }}>
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    Select a career to manage skills
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Choose a career from the list on the left to view and edit its associated skills.
+                  </Typography>
+                </Box>
+              ) : careerSkills.length === 0 ? (
+                <Box sx={{ textAlign: 'center', py: 6 }}>
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    No skills found for {selectedCareer.title}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                    This career doesn't have any skills defined yet. Add skills to help users understand what's required.
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    startIcon={<AddIcon />}
+                    onClick={() => {
+                      setSkillForm({
+                        name: '',
+                        description: '',
+                        category: SkillCategory.TECHNICAL,
+                        type: SkillType.HARD,
+                        prerequisites: [],
+                        relatedCareers: [selectedCareer.id],
+                        pathfinderCode: '',
+                        estimatedHoursToMaster: 40,
+                        proficiencyLevel: 3,
+                        isRequired: true,
+                      });
+                      setSkillFormOpen(true);
+                    }}
+                  >
+                    Add First Skill
+                  </Button>
+                </Box>
+              ) : (
+                <Box sx={{ 
+                  flexGrow: 1, 
+                  overflow: 'auto',
+                  minHeight: 0
+                }}>
+                  <TableContainer component={Paper} sx={{ height: '100%' }}>
+                    <Table stickyHeader>
+                    <TableHead>
+                      <TableRow>
+                        <TableCell>Skill Name</TableCell>
+                        <TableCell>Type</TableCell>
+                        <TableCell>Proficiency Level</TableCell>
+                        <TableCell>Required</TableCell>
+                        <TableCell>Est. Hours</TableCell>
+                        <TableCell>Actions</TableCell>
+                      </TableRow>
+                    </TableHead>
+                    <TableBody>
+                      {careerSkills.map((skill, index) => (
+                        <TableRow key={`${skill.skillId}-${index}`}>
+                          <TableCell>
+                            <Box>
+                              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                                {skill.skillName}
+                              </Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                ID: {skill.skillId}
+                              </Typography>
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={skill.skillType}
+                              size="small"
+                              color={skill.skillType === 'hard' ? 'primary' : skill.skillType === 'soft' ? 'secondary' : 'default'}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                              <Typography variant="body2">
+                                Level {skill.proficiencyLevel}
+                              </Typography>
+                              <LinearProgress
+                                variant="determinate"
+                                value={(skill.proficiencyLevel / 5) * 100}
+                                sx={{ width: 60, height: 6 }}
+                                color={
+                                  skill.proficiencyLevel >= 4 ? 'success' :
+                                  skill.proficiencyLevel >= 3 ? 'warning' : 'error'
+                                }
+                              />
+                            </Box>
+                          </TableCell>
+                          <TableCell>
+                            <Chip
+                              label={skill.isRequired ? 'Required' : 'Optional'}
+                              size="small"
+                              color={skill.isRequired ? 'error' : 'default'}
+                            />
+                          </TableCell>
+                          <TableCell>
+                            <Typography variant="body2">
+                              {skill.estimatedHours || 0}h
+                            </Typography>
+                          </TableCell>
+                          <TableCell>
+                            <Tooltip title="Edit Skill">
+                              <IconButton 
+                                size="small" 
+                                onClick={() => {
+                                  // Edit skill logic here
+                                  setSkillForm({
+                                    name: skill.skillName,
+                                    description: `${skill.skillType} skill for ${selectedCareer.title}`,
+                                    category: skill.skillType === 'soft' ? SkillCategory.INTERPERSONAL : SkillCategory.TECHNICAL,
+                                    type: skill.skillType === 'soft' ? SkillType.SOFT : SkillType.HARD,
+                                    prerequisites: [],
+                                    relatedCareers: [selectedCareer.id],
+                                    pathfinderCode: '',
+                                    estimatedHoursToMaster: skill.estimatedHours || 40,
+                                    proficiencyLevel: skill.proficiencyLevel || 3,
+                                    isRequired: skill.isRequired !== undefined ? skill.isRequired : true,
+                                  });
+                                  setEditingSkill({ ...skill, index });
+                                  setSkillFormOpen(true);
+                                }}
+                                color="primary"
+                              >
+                                <EditIcon />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Remove from Career">
+                              <IconButton 
+                                size="small" 
+                                onClick={() => {
+                                  setSkillToDelete({ ...skill, index });
+                                  setDeleteConfirmOpen(true);
+                                }}
+                                color="error"
+                              >
+                                <DeleteIcon />
+                              </IconButton>
+                            </Tooltip>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                    </Table>
+                  </TableContainer>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+    );
+  };
+
   // Render data table
   const renderDataTable = () => {
     const currentData = filteredData;
@@ -395,7 +831,7 @@ const SkillManagement: React.FC<SkillManagementProps> = () => {
                           ? `${item.description.substring(0, 80)}...` 
                           : item.description}
                       </Typography>
-                      {isHardSkillsTab && item.onetCodes && (
+                      {isHardSkillsTab && item.pathfinderCode && (
                         <Box sx={{ mt: 0.5 }}>
                           <Typography variant="caption" sx={{ 
                             backgroundColor: 'grey.100', 
@@ -404,7 +840,7 @@ const SkillManagement: React.FC<SkillManagementProps> = () => {
                             borderRadius: 0.5,
                             fontSize: '0.7rem'
                           }}>
-                            O*NET: {item.onetCodes.slice(0, 2).join(', ')}
+                            Code: {item.pathfinderCode}
                           </Typography>
                         </Box>
                       )}
@@ -456,7 +892,7 @@ const SkillManagement: React.FC<SkillManagementProps> = () => {
                       size="small" 
                       onClick={() => handleEditSkill(item)}
                       color="primary"
-                      disabled={isHardSkillsTab && item.onetCodes} // O*NET skills are read-only
+                      disabled={false} // All skills are editable in Pathfinder
                     >
                       <EditIcon />
                     </IconButton>
@@ -466,7 +902,7 @@ const SkillManagement: React.FC<SkillManagementProps> = () => {
                       size="small" 
                       onClick={() => handleDeleteSkill(item)}
                       color="error"
-                      disabled={isHardSkillsTab && item.onetCodes} // O*NET skills are read-only
+                      disabled={false} // All skills are editable in Pathfinder
                     >
                       <DeleteIcon />
                     </IconButton>
@@ -533,7 +969,7 @@ const SkillManagement: React.FC<SkillManagementProps> = () => {
               startIcon={<AddIcon />}
               onClick={() => setSkillFormOpen(true)}
               size="small"
-              disabled={tabValue === 1} // O*NET skills are managed automatically
+              disabled={false} // All skills are editable in Pathfinder
             >
               Add {tabValue === 0 ? 'Skill' : tabValue === 1 ? 'Custom Skill' : 'Certification'}
             </Button>
@@ -576,6 +1012,11 @@ const SkillManagement: React.FC<SkillManagementProps> = () => {
               label={`Certifications (${certifications.length})`}
               iconPosition="start"
             />
+            <Tab 
+              icon={<TrendingUp />} 
+              label={`Career Skills (${careers.length})`}
+              iconPosition="start"
+            />
           </Tabs>
         </Box>
 
@@ -585,25 +1026,30 @@ const SkillManagement: React.FC<SkillManagementProps> = () => {
               <><strong>Soft Skills:</strong> Manage universal skills like communication, leadership, and problem-solving. These skills apply across all careers.</>
             )}
             {tabValue === 1 && (
-              <><strong>Hard Skills:</strong> Technical skills from O*NET database with market demand data. O*NET skills are read-only but you can create custom skills.</>
+              <><strong>Hard Skills:</strong> Technical skills in your Pathfinder database. All skills are fully customizable.</>
             )}
             {tabValue === 2 && (
               <><strong>Certifications:</strong> Professional certifications that unlock and advance related skills. Import industry-standard certifications or create custom ones.</>
             )}
+            {tabValue === 3 && (
+              <><strong>Career Skills:</strong> View and manage skills associated with specific career paths. Add, edit, or remove skills for each career, set proficiency levels and requirements.</>
+            )}
           </Typography>
         </Alert>
 
-        <TextField
-          fullWidth
-          placeholder={`Search ${tabValue === 0 ? 'soft skills' : tabValue === 1 ? 'hard skills' : 'certifications'}...`}
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          sx={{ mb: 3 }}
-        />
+        {tabValue !== 3 && (
+          <TextField
+            fullWidth
+            placeholder={`Search ${tabValue === 0 ? 'soft skills' : tabValue === 1 ? 'hard skills' : 'certifications'}...`}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            sx={{ mb: 3 }}
+          />
+        )}
 
-        {renderDataTable()}
+        {tabValue === 3 ? renderCareerSkillsManagement() : renderDataTable()}
 
-        {filteredData.length === 0 && !loading && (
+        {tabValue !== 3 && filteredData.length === 0 && !loading && (
           <Box sx={{ textAlign: 'center', py: 4 }}>
             <Typography variant="body1" color="text.secondary">
               No {tabValue === 0 ? 'soft skills' : tabValue === 1 ? 'hard skills' : 'certifications'} found.
@@ -615,7 +1061,10 @@ const SkillManagement: React.FC<SkillManagementProps> = () => {
       {/* Skill Form Dialog */}
       <Dialog open={skillFormOpen} onClose={handleFormClose} maxWidth="md" fullWidth>
         <DialogTitle>
-          {editingSkill ? `Edit ${tabValue === 0 ? 'Skill' : 'Item'}` : `Create New ${tabValue === 0 ? 'Skill' : 'Item'}`}
+          {editingSkill ? 
+            (tabValue === 3 ? `Edit Career Skill` : `Edit ${tabValue === 0 ? 'Skill' : 'Item'}`) : 
+            (tabValue === 3 ? `Add Skill to ${selectedCareer?.title || 'Career'}` : `Create New ${tabValue === 0 ? 'Skill' : 'Item'}`)
+          }
         </DialogTitle>
         <DialogContent>
           <Grid container spacing={3} sx={{ mt: 1 }}>
@@ -678,9 +1127,10 @@ const SkillManagement: React.FC<SkillManagementProps> = () => {
             <Grid item xs={6}>
               <TextField
                 fullWidth
-                label="O*NET Code (Optional)"
-                value={skillForm.onetCode}
-                onChange={(e) => setSkillForm({ ...skillForm, onetCode: e.target.value })}
+                label="Pathfinder Code"
+                value={skillForm.pathfinderCode}
+                onChange={(e) => setSkillForm({ ...skillForm, pathfinderCode: e.target.value })}
+                placeholder="Auto-generated unique identifier"
               />
             </Grid>
             
@@ -694,6 +1144,42 @@ const SkillManagement: React.FC<SkillManagementProps> = () => {
                 required
               />
             </Grid>
+            
+            {/* Career-specific fields */}
+            {tabValue === 3 && (
+              <>
+                <Grid item xs={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Proficiency Level Required</InputLabel>
+                    <Select
+                      value={skillForm.proficiencyLevel}
+                      onChange={(e) => setSkillForm({ ...skillForm, proficiencyLevel: parseInt(e.target.value as string) })}
+                      label="Proficiency Level Required"
+                    >
+                      <MenuItem value={1}>1 - Novice</MenuItem>
+                      <MenuItem value={2}>2 - Beginner</MenuItem>
+                      <MenuItem value={3}>3 - Intermediate</MenuItem>
+                      <MenuItem value={4}>4 - Advanced</MenuItem>
+                      <MenuItem value={5}>5 - Expert</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                
+                <Grid item xs={6}>
+                  <FormControl fullWidth>
+                    <InputLabel>Requirement Status</InputLabel>
+                    <Select
+                      value={skillForm.isRequired.toString()}
+                      onChange={(e) => setSkillForm({ ...skillForm, isRequired: e.target.value === 'true' })}
+                      label="Requirement Status"
+                    >
+                      <MenuItem value="true">Required</MenuItem>
+                      <MenuItem value="false">Optional</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </>
+            )}
           </Grid>
         </DialogContent>
         <DialogActions>

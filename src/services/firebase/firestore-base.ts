@@ -18,7 +18,8 @@ import {
   DocumentData,
   writeBatch,
   serverTimestamp,
-  Timestamp
+  Timestamp,
+  getCountFromServer
 } from 'firebase/firestore';
 import { db } from '../../firebase/config';
 import type { CareerFieldKey, Career } from '../types';
@@ -117,6 +118,7 @@ export {
   startAfter,
   writeBatch,
   serverTimestamp,
+  getCountFromServer,
   db
 };
 

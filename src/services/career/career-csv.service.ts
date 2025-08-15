@@ -56,7 +56,7 @@ export const careerCSVService = {
         'id',
         'title',
         'description',
-        'onetCode',
+        'pathfinderCode',
         'difficulty',
         'estimatedTimeToMaster',
         'fields',
@@ -76,7 +76,7 @@ export const careerCSVService = {
           escapeCSVField(career.id || ''),
           escapeCSVField(career.title || ''),
           escapeCSVField(career.description || ''),
-          escapeCSVField(career.onetCode || ''),
+          escapeCSVField(career.pathfinderCode || ''),
           escapeCSVField(career.difficulty || ''),
           escapeCSVField(career.estimatedTimeToMaster?.toString() || ''),
           escapeCSVField(career.fields ? career.fields.join(';') : ''),
@@ -115,7 +115,7 @@ export const careerCSVService = {
       console.log('CSV headers:', headers);
 
       // Validate required headers
-      const requiredHeaders = ['title', 'description', 'onetCode', 'difficulty', 'estimatedTimeToMaster'];
+      const requiredHeaders = ['title', 'description', 'pathfinderCode', 'difficulty', 'estimatedTimeToMaster'];
       const missingHeaders = requiredHeaders.filter(header => !headers.includes(header));
       
       if (missingHeaders.length > 0) {
@@ -152,7 +152,7 @@ export const careerCSVService = {
             switch (header) {
               case 'title':
               case 'description':
-              case 'onetCode':
+              case 'pathfinderCode':
               case 'jobOutlook':
                 careerData[header] = value || '';
                 break;

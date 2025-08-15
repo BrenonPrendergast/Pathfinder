@@ -48,7 +48,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { skillService } from '../services/skill/skill.service';
-import { hardSkillsService, onetIntegrationService } from '../services';
+import { hardSkillsService } from '../services';
 import { 
   SkillTreeNode, 
   SkillProficiencyLevel, 

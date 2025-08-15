@@ -136,7 +136,7 @@ const CareerDetailPage: React.FC = () => {
               {career.title}
             </Typography>
             <Typography variant="body1" color="text.secondary">
-              O*NET Code: {career.onetCode}
+              Pathfinder Code: {career.pathfinderCode || 'Not assigned'}
             </Typography>
           </Box>
         </Box>

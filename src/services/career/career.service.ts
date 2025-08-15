@@ -15,7 +15,8 @@ import {
   startAfter,
   serverTimestamp,
   db,
-  QueryDocumentSnapshot
+  QueryDocumentSnapshot,
+  getCountFromServer
 } from '../firebase/firestore-base';
 import {
   convertTimestamps,
@@ -164,6 +165,26 @@ export const careerService = {
     } catch (error) {
       console.error('Error fetching all careers:', error);
       throw error;
+    }
+  },
+
+  // Get total career count (efficient - doesn't fetch all documents)
+  async getCareerCount(): Promise<number> {
+    try {
+      const coll = collection(db, 'careers');
+      const snapshot = await getCountFromServer(coll);
+      return snapshot.data().count;
+    } catch (error) {
+      console.error('Error getting career count:', error);
+      // Fallback to estimating based on limited query if count fails
+      try {
+        const q = query(collection(db, 'careers'), limit(1000));
+        const querySnapshot = await getDocs(q);
+        return querySnapshot.size >= 1000 ? 1000 : querySnapshot.size;
+      } catch (fallbackError) {
+        console.error('Error in career count fallback:', fallbackError);
+        return 0;
+      }
     }
   },
 

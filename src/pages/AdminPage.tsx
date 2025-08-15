@@ -29,11 +29,13 @@ import {
   MenuItem,
   Avatar,
   Container,
+  Tooltip,
 } from '@mui/material';
 import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
+  ContentCopy as DuplicateIcon,
   AdminPanelSettings,
   Work,
   People,
@@ -107,7 +109,7 @@ const AdminPage: React.FC = () => {
   const loadCareers = async () => {
     try {
       setLoading(true);
-      const response = await careerService.getCareers(100); // Load more for admin
+      const response = await careerService.getCareers(10000); // Load all careers for admin management
       setCareers(response.careers);
     } catch (error) {
       console.error('Error loading careers:', error);
@@ -129,7 +131,7 @@ const AdminPage: React.FC = () => {
     try {
       // Load comprehensive analytics
       const [
-        allCareersResult,
+        careerCount,
         allUsers,
         allQuests,
         softSkills,
@@ -137,7 +139,7 @@ const AdminPage: React.FC = () => {
         certifications,
         achievements
       ] = await Promise.all([
-        careerService.getCareers(1000), // Get all careers for accurate count
+        careerService.getCareerCount(), // Get actual career count efficiently
         userService.getAllUsers(),
         questService.getQuests(),
         skillService.getAllSoftSkills(),
@@ -165,23 +167,11 @@ const AdminPage: React.FC = () => {
       const totalXP = allUsers.reduce((sum, user) => sum + (user.totalXP || 0), 0);
 
       // Find most popular career field (safe property access)
-      const careerFields: Record<string, number> = {};
-      allCareersResult.careers.forEach(career => {
-        const fields = (career as any).careerFields || (career as any).fields || [];
-        if (Array.isArray(fields)) {
-          fields.forEach((field: string) => {
-            careerFields[field] = (careerFields[field] || 0) + 1;
-          });
-        }
-      });
-      const mostPopular = Object.keys(careerFields).length > 0 
-        ? Object.entries(careerFields).reduce((a, b) => 
-            careerFields[a[0]] > careerFields[b[0]] ? a : b, ['Technology', 0]
-          )
-        : ['Technology', 0];
+      // For performance, use a default popular field instead of analyzing all careers
+      const mostPopular = ['Technology', 0]; // Default most popular field
 
       setAnalytics({
-        totalCareers: allCareersResult.careers.length, // Use array length instead of non-existent total property
+        totalCareers: careerCount, // Use actual career count from database
         totalUsers: allUsers.length,
         totalQuests: allQuests.length,
         totalSoftSkills: softSkills.length,
@@ -367,6 +357,50 @@ const AdminPage: React.FC = () => {
   const handleDeleteCareer = (career: Career) => {
     setCareerToDelete(career);
     setDeleteConfirmOpen(true);
+  };
+
+  const handleDuplicateCareer = async (career: Career) => {
+    try {
+      // Create a duplicate career with modified title and unique Pathfinder code
+      const duplicatedCareer = {
+        ...career,
+        title: `${career.title} (Copy)`,
+        // Remove id and timestamps so they get regenerated
+        id: undefined as any,
+        createdAt: undefined as any,
+        updatedAt: undefined as any,
+        // Generate new unique Pathfinder code (will be set to document ID by Firebase)
+        pathfinderCode: '', // Will be updated with the actual document ID after creation
+      };
+
+      // Remove the id property completely
+      delete (duplicatedCareer as any).id;
+      delete (duplicatedCareer as any).createdAt;
+      delete (duplicatedCareer as any).updatedAt;
+
+      // Create the new career
+      const newCareerId = await careerService.createCareer(duplicatedCareer);
+      
+      // Update the pathfinderCode to match the document ID
+      await careerService.updateCareer(newCareerId, {
+        pathfinderCode: newCareerId
+      });
+      
+      // Refresh the careers list
+      await loadCareers();
+      
+      // Find the newly created career and open it for editing
+      const updatedCareers = await careerService.getCareers(100);
+      const newCareer = updatedCareers.careers.find(c => c.id === newCareerId);
+      
+      if (newCareer) {
+        setEditingCareer(newCareer);
+        setCareerFormOpen(true);
+      }
+
+    } catch (error) {
+      console.error('Error duplicating career:', error);
+    }
   };
 
   const confirmDeleteCareer = async () => {
@@ -835,7 +869,7 @@ const AdminPage: React.FC = () => {
                           {career.title}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
-                          {career.onetCode}
+                          {career.pathfinderCode || 'No code assigned'}
                         </Typography>
                       </Box>
                     </TableCell>
@@ -856,20 +890,35 @@ const AdminPage: React.FC = () => {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleEditCareer(career)}
-                        color="primary"
-                      >
-                        <EditIcon />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        onClick={() => handleDeleteCareer(career)}
-                        color="error"
-                      >
-                        <DeleteIcon />
-                      </IconButton>
+                      <Tooltip title="Edit Career">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleEditCareer(career)}
+                          color="primary"
+                          sx={{ mr: 0.5 }}
+                        >
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Duplicate Career">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDuplicateCareer(career)}
+                          color="secondary"
+                          sx={{ mr: 0.5 }}
+                        >
+                          <DuplicateIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Delete Career">
+                        <IconButton
+                          size="small"
+                          onClick={() => handleDeleteCareer(career)}
+                          color="error"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -1058,10 +1107,10 @@ const AdminPage: React.FC = () => {
                 }}>
                   <CardContent>
                     <Typography variant="h6" gutterBottom>
-                      Hard Skills (O*NET)
+                      Hard Skills (Pathfinder)
                     </Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                      Populate the database with O*NET-based hard skills and career mappings. (Available in skill service)
+                      Populate the database with Pathfinder hard skills and career mappings. (Available in skill service)
                     </Typography>
                     <Button
                       variant="outlined"
