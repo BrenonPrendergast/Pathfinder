@@ -1,6 +1,6 @@
 import React, { memo, useState } from 'react';
 import { Handle, Position, NodeProps } from '@xyflow/react';
-import { Box, Typography, Tooltip, Avatar } from '@mui/material';
+import { Box, Typography, Avatar } from '@mui/material';
 import { 
   Star, 
   Lock, 
@@ -15,7 +15,10 @@ interface SkillStarNodeData {
   id: string;
   name: string;
   description: string;
-  level: number;
+  level: number; // Template difficulty level
+  userLevel?: number; // User's current investment
+  maxLevel?: number; // Maximum investment level
+  pointCost?: number; // Points required per level
   isUnlocked: boolean;
   isAvailable: boolean;
   category: string;
@@ -25,6 +28,9 @@ interface SkillStarNodeData {
   constellation: string;
   onSelect?: () => void;
   onUnlock?: () => void;
+  onAddPoint?: () => void;
+  onRemovePoint?: () => void;
+  availablePoints?: number;
   connectionMode?: 'none' | 'creating' | 'tutorial' | 'deleting';
   isFirstSelected?: boolean;
   nodeScale?: number;
@@ -43,17 +49,22 @@ const SkillStarNode: React.FC<NodeProps> = ({ data, selected }) => {
   const [isHovered, setIsHovered] = useState(false);
   
   const getStarSize = () => {
-    const baseSize = (() => {
-      switch (skillData.starType) {
-        case 'supergiant': return 48;
-        case 'giant': return 40;
-        case 'main-sequence': return 32;
-        case 'dwarf': return 24;
-        default: return 32;
-      }
-    })();
-    
-    return Math.round(baseSize * (skillData.nodeScale || 1));
+    if (skillData.isAdminMode) {
+      // Admin mode: Allow scaling based on star type and nodeScale
+      const baseSize = (() => {
+        switch (skillData.starType) {
+          case 'supergiant': return 48;
+          case 'giant': return 40;
+          case 'main-sequence': return 32;
+          case 'dwarf': return 24;
+          default: return 32;
+        }
+      })();
+      return Math.round(baseSize * (skillData.nodeScale || 1));
+    } else {
+      // User mode: Standardized size for consistency
+      return 36;
+    }
   };
 
   const getStarColor = () => {
@@ -131,7 +142,7 @@ const SkillStarNode: React.FC<NodeProps> = ({ data, selected }) => {
         border: skillData.isFirstSelected 
           ? '3px solid #fbbf24' 
           : selected 
-          ? '3px solid #6366f1' 
+          ? '3px solid #ff8500' 
           : '2px solid rgba(255, 255, 255, 0.3)',
         transform: isHovered || selected ? 'scale(1.1)' : 'scale(1)',
         position: 'relative',
@@ -171,6 +182,135 @@ const SkillStarNode: React.FC<NodeProps> = ({ data, selected }) => {
     >
       {/* Star Icon */}
       {getStarIcon()}
+      
+      {/* Point Controls - Show on hover/select in non-admin mode */}
+      {!skillData.isAdminMode && (isHovered || selected) && (
+        <Box sx={{
+          position: 'absolute',
+          top: -30,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          display: 'flex',
+          gap: 0.5,
+          zIndex: 3,
+          backgroundColor: 'rgba(31, 41, 55, 0.9)',
+          borderRadius: 1,
+          p: 0.5,
+          border: '1px solid rgba(99, 102, 241, 0.3)',
+        }}>
+          {/* Remove Point Button */}
+          <Box
+            onClick={(e) => {
+              e.stopPropagation();
+              skillData.onRemovePoint?.();
+            }}
+            sx={{
+              width: 20,
+              height: 20,
+              borderRadius: '50%',
+              backgroundColor: (skillData.userLevel || 0) > 0 ? '#ef4444' : 'rgba(107, 114, 128, 0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: (skillData.userLevel || 0) > 0 ? 'pointer' : 'not-allowed',
+              transition: 'all 0.2s ease',
+              '&:hover': (skillData.userLevel || 0) > 0 ? {
+                backgroundColor: '#dc2626',
+                transform: 'scale(1.1)',
+              } : {},
+            }}
+          >
+            <Typography variant="caption" sx={{ 
+              color: 'white', 
+              fontWeight: 600, 
+              fontSize: '12px',
+              lineHeight: 1,
+            }}>
+              -
+            </Typography>
+          </Box>
+
+          {/* Current Level Display */}
+          <Box sx={{
+            minWidth: 20,
+            height: 20,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(99, 102, 241, 0.8)',
+            borderRadius: 0.5,
+            px: 0.5,
+          }}>
+            <Typography variant="caption" sx={{ 
+              color: 'white', 
+              fontWeight: 600,
+              fontSize: '10px',
+            }}>
+              {skillData.userLevel || 0}/{skillData.maxLevel || 5}
+            </Typography>
+          </Box>
+
+          {/* Add Point Button */}
+          <Box
+            onClick={(e) => {
+              e.stopPropagation();
+              skillData.onAddPoint?.();
+            }}
+            sx={{
+              width: 20,
+              height: 20,
+              borderRadius: '50%',
+              backgroundColor: (skillData.availablePoints || 0) > 0 && (skillData.userLevel || 0) < (skillData.maxLevel || 5) 
+                ? '#00B162' : 'rgba(107, 114, 128, 0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: (skillData.availablePoints || 0) > 0 && (skillData.userLevel || 0) < (skillData.maxLevel || 5)
+                ? 'pointer' : 'not-allowed',
+              transition: 'all 0.2s ease',
+              '&:hover': (skillData.availablePoints || 0) > 0 && (skillData.userLevel || 0) < (skillData.maxLevel || 5) ? {
+                backgroundColor: '#009654',
+                transform: 'scale(1.1)',
+              } : {},
+            }}
+          >
+            <Typography variant="caption" sx={{ 
+              color: 'white', 
+              fontWeight: 600, 
+              fontSize: '12px',
+              lineHeight: 1,
+            }}>
+              +
+            </Typography>
+          </Box>
+        </Box>
+      )}
+      
+      {/* User Progress Indicator */}
+      {!skillData.isAdminMode && (skillData.userLevel || 0) > 0 && (
+        <Box sx={{
+          position: 'absolute',
+          top: -8,
+          right: -8,
+          backgroundColor: '#00B162',
+          borderRadius: '50%',
+          width: 16,
+          height: 16,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          border: '1px solid white',
+          zIndex: 2,
+        }}>
+          <Typography variant="caption" sx={{ 
+            color: 'white', 
+            fontWeight: 600,
+            fontSize: '9px',
+          }}>
+            {skillData.userLevel}
+          </Typography>
+        </Box>
+      )}
       
       {/* Skill Status Indicator */}
       <Box sx={{
@@ -217,165 +357,91 @@ const SkillStarNode: React.FC<NodeProps> = ({ data, selected }) => {
     </Box>
   );
 
-  // Determine if tooltip should be disabled for better connection management
-  const shouldDisableTooltip = skillData.isAdminMode && (
-    skillData.connectionMode === 'creating' || 
-    skillData.connectionMode === 'deleting'
-  );
-
-  // Get tooltip delay based on mode
-  const getTooltipDelay = () => {
-    if (skillData.isAdminMode) {
-      if (skillData.connectionMode === 'creating' || skillData.connectionMode === 'deleting') {
-        return 2000; // Very long delay during active connection management
-      }
-      return 800; // Longer delay in admin mode
-    }
-    return 500; // Normal delay for regular users
-  };
 
   return (
-    <Tooltip
-      title={shouldDisableTooltip ? "" : (
-        <Box sx={{ p: 1 }}>
-          <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
-            {skillData.name}
-          </Typography>
-          <Typography variant="body2" sx={{ mb: 1, opacity: 0.9 }}>
-            {skillData.description}
-          </Typography>
-          <Box sx={{ display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
-            <Typography variant="caption" sx={{ 
-              backgroundColor: 'rgba(0, 177, 98, 0.2)', 
-              px: 1, 
-              py: 0.25, 
-              borderRadius: 1,
-              color: '#00B162'
-            }}>
-              {skillData.xpReward} XP
-            </Typography>
-            <Typography variant="caption" sx={{ 
-              backgroundColor: 'rgba(99, 102, 241, 0.2)', 
-              px: 1, 
-              py: 0.25, 
-              borderRadius: 1,
-              color: '#6366f1'
-            }}>
-              {skillData.starType}
-            </Typography>
-            {!skillData.isAvailable && skillData.prerequisites.length > 0 && (
-              <Typography variant="caption" sx={{ 
-                backgroundColor: 'rgba(239, 68, 68, 0.2)', 
-                px: 1, 
-                py: 0.25, 
-                borderRadius: 1,
-                color: '#ef4444'
-              }}>
-                <Lock size={10} style={{ marginRight: 4, display: 'inline' }} />
-                Prerequisites required
-              </Typography>
-            )}
-          </Box>
-        </Box>
-      )}
-      arrow
-      placement="top"
-      disableHoverListener={shouldDisableTooltip}
-      enterDelay={getTooltipDelay()}
-      leaveDelay={200}
-      componentsProps={{
-        tooltip: {
-          sx: {
-            backgroundColor: 'rgba(31, 41, 55, 0.95)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(99, 102, 241, 0.3)',
-            maxWidth: 300,
-            zIndex: skillData.isAdminMode ? 1000 : 1500, // Lower z-index in admin mode
-            pointerEvents: skillData.isAdminMode ? 'none' : 'auto', // Disable pointer events in admin mode
-          },
-        },
-      }}
+    <Box 
+      onMouseEnter={() => skillData.onSelect?.()}
+      onMouseLeave={() => {}} 
+      sx={{ position: 'relative' }}
     >
-      <Box sx={{ position: 'relative' }}>
-        {/* Connection Handles - More visible and multiple positions */}
-        <Handle
-          type="target"
-          position={Position.Top}
-          style={{
-            background: '#6366f1',
-            border: '2px solid white',
-            width: Math.round(10 * (skillData.nodeScale || 1)),
-            height: Math.round(10 * (skillData.nodeScale || 1)),
-            opacity: isHovered || selected ? 1 : 0.3,
-            transition: 'opacity 0.2s ease',
-          }}
-        />
-        <Handle
-          type="source"
-          position={Position.Bottom}
-          style={{
-            background: '#00B162',
-            border: '2px solid white',
-            width: Math.round(10 * (skillData.nodeScale || 1)),
-            height: Math.round(10 * (skillData.nodeScale || 1)),
-            opacity: isHovered || selected ? 1 : 0.3,
-            transition: 'opacity 0.2s ease',
-          }}
-        />
-        <Handle
-          type="target"
-          position={Position.Left}
-          style={{
-            background: '#6366f1',
-            border: '2px solid white',
-            width: Math.round(10 * (skillData.nodeScale || 1)),
-            height: Math.round(10 * (skillData.nodeScale || 1)),
-            opacity: isHovered || selected ? 1 : 0.3,
-            transition: 'opacity 0.2s ease',
-          }}
-        />
-        <Handle
-          type="source"
-          position={Position.Right}
-          style={{
-            background: '#00B162',
-            border: '2px solid white',
-            width: Math.round(10 * (skillData.nodeScale || 1)),
-            height: Math.round(10 * (skillData.nodeScale || 1)),
-            opacity: isHovered || selected ? 1 : 0.3,
-            transition: 'opacity 0.2s ease',
-          }}
-        />
-        
-        {/* Star Node */}
-        <StarComponent />
-        
-        {/* Skill Name Label */}
-        <Typography
-          variant="caption"
-          sx={{
-            position: 'absolute',
-            top: getStarSize() + 8,
-            left: '50%',
-            transform: 'translateX(-50%)',
-            color: 'white',
-            textAlign: 'center',
-            fontWeight: 600,
-            textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)',
-            minWidth: 'max-content',
-            maxWidth: skillData.textScale ? 80 * skillData.textScale : 80,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            fontSize: skillData.textScale ? `${0.7 * skillData.textScale}rem` : '0.7rem',
-            opacity: isHovered || selected ? 1 : 0.8,
-            transition: 'opacity 0.2s ease, font-size 0.2s ease',
-          }}
-        >
-          {skillData.name}
-        </Typography>
-      </Box>
-    </Tooltip>
+      {/* Connection Handles - More visible and multiple positions */}
+      <Handle
+        type="target"
+        position={Position.Top}
+        style={{
+          background: '#6366f1',
+          border: '2px solid white',
+          width: skillData.isAdminMode ? Math.round(10 * (skillData.nodeScale || 1)) : 10,
+          height: skillData.isAdminMode ? Math.round(10 * (skillData.nodeScale || 1)) : 10,
+          opacity: isHovered || selected ? 1 : 0.3,
+          transition: 'opacity 0.2s ease',
+        }}
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        style={{
+          background: '#00B162',
+          border: '2px solid white',
+          width: skillData.isAdminMode ? Math.round(10 * (skillData.nodeScale || 1)) : 10,
+          height: skillData.isAdminMode ? Math.round(10 * (skillData.nodeScale || 1)) : 10,
+          opacity: isHovered || selected ? 1 : 0.3,
+          transition: 'opacity 0.2s ease',
+        }}
+      />
+      <Handle
+        type="target"
+        position={Position.Left}
+        style={{
+          background: '#6366f1',
+          border: '2px solid white',
+          width: skillData.isAdminMode ? Math.round(10 * (skillData.nodeScale || 1)) : 10,
+          height: skillData.isAdminMode ? Math.round(10 * (skillData.nodeScale || 1)) : 10,
+          opacity: isHovered || selected ? 1 : 0.3,
+          transition: 'opacity 0.2s ease',
+        }}
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        style={{
+          background: '#00B162',
+          border: '2px solid white',
+          width: skillData.isAdminMode ? Math.round(10 * (skillData.nodeScale || 1)) : 10,
+          height: skillData.isAdminMode ? Math.round(10 * (skillData.nodeScale || 1)) : 10,
+          opacity: isHovered || selected ? 1 : 0.3,
+          transition: 'opacity 0.2s ease',
+        }}
+      />
+      
+      {/* Star Node */}
+      <StarComponent />
+      
+      {/* Skill Name Label */}
+      <Typography
+        variant="caption"
+        sx={{
+          position: 'absolute',
+          top: getStarSize() + 8,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          color: 'white',
+          textAlign: 'center',
+          fontWeight: 600,
+          textShadow: '0 1px 3px rgba(0, 0, 0, 0.8)',
+          minWidth: 'max-content',
+          maxWidth: skillData.isAdminMode ? (skillData.textScale ? 80 * skillData.textScale : 80) : 80,
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+          fontSize: skillData.isAdminMode ? (skillData.textScale ? `${0.7 * skillData.textScale}rem` : '0.7rem') : '0.7rem',
+          opacity: isHovered || selected ? 1 : 0.8,
+          transition: 'opacity 0.2s ease, font-size 0.2s ease',
+        }}
+      >
+        {skillData.name}
+      </Typography>
+    </Box>
   );
 };
 

@@ -67,11 +67,16 @@ firebase deploy --only firestore:rules
 
 ### Key Components
 - **AuthContext** (`src/contexts/AuthContext.tsx`): User authentication and profile management
+- **NotificationContext** (`src/contexts/NotificationContext.tsx`): Global notification system for user feedback
 - **Layout** (`src/components/Layout/Layout.tsx`): Navigation and layout wrapper
 - **PathfinderLogo** (`src/components/PathfinderLogo.tsx`): Custom SVG logo component with size variants
 - **GamingBackground** (`src/components/backgrounds/GamingBackground.tsx`): Particle animation system
 - **FloatingNodes** (`src/components/backgrounds/FloatingNodes.tsx`): Interactive node network visualization
 - **InteractiveSpotlight** (`src/components/backgrounds/InteractiveSpotlight.tsx`): Cursor particle effects
+- **ConstellationSkillTree** (`src/components/ConstellationSkillTree.tsx`): React Flow-based skill visualization
+- **AdminConstellationEditor** (`src/components/constellation/AdminConstellationEditor.tsx`): Full-featured admin skill editor
+- **ComingSoonPlaceholder** (`src/components/ComingSoonPlaceholder.tsx`): Professional placeholder for missing templates
+- **SkillStarNode** (`src/components/constellation/SkillStarNode.tsx`): Star-themed skill nodes with animations
 - **StatsService** (`src/services/stats/stats.service.ts`): Real-time database statistics
 - **ProtectedRoute**: Route guards for authenticated users
 - **AdminPage**: User management and content administration
@@ -99,6 +104,16 @@ The application uses 18 standardized career field categories based on industry c
 - **Level Progression**: Logarithmic XP-to-level calculation
 - **Skill Tracking**: Hours spent learning specific skills
 - **Achievement System**: Unlockable badges based on user activity
+
+### Skill Tree System (Template-Based Architecture)
+- **Template-Driven Constellations**: Admin-created skill templates stored in `skill-constellations` collection
+- **React Flow Integration**: Interactive star-map visualization with drag-and-drop editing
+- **Coming Soon Fallback**: Professional UX when templates don't exist yet
+- **Star Types**: Different skill visualizations (dwarf, main-sequence, giant, supergiant)
+- **Prerequisite System**: Visual connections showing skill dependencies
+- **Admin Constellation Editor**: Full-featured editing interface with grid snapping, connection management
+- **Custom Scaling**: Adjustable node and text scaling for different screen sizes
+- **Multi-Career Support**: Separate constellation templates per career path
 
 ## Design System & Consistency Standards
 
@@ -171,6 +186,16 @@ Quests should be linked to specific careers and include:
 - Appropriate XP rewards
 - Skill progression tracking
 - External resource links when applicable
+
+### Managing Skill Constellations
+Skill constellations are template-based and managed through the admin interface:
+- **Template Creation**: Use AdminConstellationEditor to create new skill templates
+- **Career-Specific**: Each career path has its own constellation template
+- **Skill Import**: Import existing skills from various Firestore collections
+- **Visual Layout**: Drag-and-drop positioning with grid snapping
+- **Prerequisite Management**: Click-to-connect dependency system
+- **Coming Soon Display**: Automatic fallback when templates don't exist
+- **Version Control**: Templates include metadata and can be versioned
 
 ### Testing User Flows
 - Test both authenticated and public routes

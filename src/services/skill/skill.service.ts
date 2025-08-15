@@ -479,7 +479,7 @@ class SkillService {
     try {
       console.log(`Fetching skills for career path: ${careerPath}`);
       
-      // Try to get saved constellation template from admin
+      // Try to get saved constellation template from admin first
       const constellationRef = doc(db, 'skill-constellations', careerPath);
       const constellationDoc = await getDoc(constellationRef);
       
@@ -490,13 +490,70 @@ class SkillService {
         return skills;
       }
       
-      console.log(`No admin template found for ${careerPath} - will show Coming Soon`);
-      // NO MOCK DATA - return empty array to trigger "Coming Soon" display
+      // No template exists - check if this is a real career and auto-import its skills
+      console.log(`No admin template found for ${careerPath} - checking career database`);
+      
+      if (careerPath !== 'general') {
+        try {
+          // Import career service to get career data
+          const { careerService } = await import('../career/career.service');
+          const career = await careerService.getCareer(careerPath);
+          
+          if (career && career.skills && career.skills.length > 0) {
+            console.log(`Found career with ${career.skills.length} skills - auto-importing`);
+            
+            // Convert career skills to constellation format
+            const constellationSkills = career.skills.map((skill, index) => ({
+              id: skill.skillId || `${career.title.toLowerCase().replace(/\s+/g, '_')}_skill_${index}`,
+              name: skill.skillName || skill.skillId || `${career.title} Skill ${index + 1}`,
+              description: `${skill.skillType || 'Core'} skill for ${career.title}${skill.skillName ? `: ${skill.skillName}` : ''}`,
+              level: skill.proficiencyLevel || 1,
+              isUnlocked: false,
+              isAvailable: skill.isRequired || index === 0, // First skill or required skills are available
+              category: skill.skillType || 'general',
+              xpReward: (skill.proficiencyLevel || 1) * 10,
+              prerequisites: index === 0 ? [] : [career.skills[index - 1]?.skillId || `skill_${index - 1}`],
+              starType: this.getStarTypeByProficiency(skill.proficiencyLevel || 1),
+              constellation: skill.skillType || 'general',
+              estimatedHours: skill.estimatedHours || 0,
+              isRequired: skill.isRequired || false,
+              // Default positioning - will be arranged in grid
+              position: {
+                x: (index % 4) * 200 + 100,
+                y: Math.floor(index / 4) * 150 + 100
+              }
+            }));
+            
+            console.log(`Auto-imported ${constellationSkills.length} skills from career data`);
+            return constellationSkills;
+          }
+        } catch (careerError) {
+          console.log('Could not load career data:', careerError);
+        }
+      }
+      
+      console.log(`No skills found for ${careerPath} - will show Coming Soon`);
       return [];
     } catch (error) {
       console.error('Error loading constellation template:', error);
-      // Return empty array on error to show "Coming Soon" rather than crash
       return [];
+    }
+  }
+
+  // Helper method to determine star type based on proficiency level
+  private getStarTypeByProficiency(proficiencyLevel: number): string {
+    switch (proficiencyLevel) {
+      case 1:
+      case 2:
+        return 'dwarf';
+      case 3:
+        return 'main-sequence';
+      case 4:
+        return 'giant';
+      case 5:
+        return 'supergiant';
+      default:
+        return 'main-sequence';
     }
   }
 

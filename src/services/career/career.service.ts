@@ -131,6 +131,42 @@ export const careerService = {
     }
   },
 
+  // Get all careers for admin dropdown (no pagination)
+  async getAllCareers(): Promise<Career[]> {
+    try {
+      // Check cache first
+      if (isCacheValid() && getAllCareersCache().length > 0) {
+        return getAllCareersCache();
+      }
+
+      // Fetch all careers from Firestore
+      const q = query(
+        collection(db, 'careers'),
+        orderBy('title'),
+        limit(1000) // Get up to 1000 careers
+      );
+
+      const querySnapshot = await getDocs(q);
+      const allCareers: Career[] = [];
+      
+      querySnapshot.forEach((doc) => {
+        allCareers.push({
+          id: doc.id,
+          ...convertTimestamps(doc.data())
+        } as Career);
+      });
+
+      // Cache the results
+      setAllCareersCache(allCareers);
+      setCacheTimestamp(Date.now());
+
+      return allCareers;
+    } catch (error) {
+      console.error('Error fetching all careers:', error);
+      throw error;
+    }
+  },
+
   // Get single career by ID
   async getCareer(careerId: string): Promise<Career | null> {
     try {

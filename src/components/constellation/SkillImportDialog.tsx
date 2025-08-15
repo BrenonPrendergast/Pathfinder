@@ -44,6 +44,8 @@ interface SkillImportDialogProps {
   onClose: () => void;
   onImport: (skills: any[]) => void;
   existingSkillIds?: string[];
+  careerPath?: string;
+  careerName?: string;
 }
 
 interface ImportSkill {
@@ -65,11 +67,15 @@ const SkillImportDialog: React.FC<SkillImportDialogProps> = ({
   onClose,
   onImport,
   existingSkillIds = [],
+  careerPath,
+  careerName,
 }) => {
   const [tabValue, setTabValue] = useState(0);
   const [availableSkills, setAvailableSkills] = useState<ImportSkill[]>([]);
+  const [careerSkills, setCareerSkills] = useState<ImportSkill[]>([]);
   const [selectedSkills, setSelectedSkills] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
+  const [loadingCareerSkills, setLoadingCareerSkills] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [sourceFilter, setSourceFilter] = useState('all');
@@ -81,8 +87,11 @@ const SkillImportDialog: React.FC<SkillImportDialogProps> = ({
     if (open) {
       loadSkillsData();
       loadCollections();
+      if (careerPath && careerPath !== 'general') {
+        loadCareerSkills();
+      }
     }
-  }, [open]);
+  }, [open, careerPath]);
 
   const loadSkillsData = async () => {
     try {
@@ -102,6 +111,41 @@ const SkillImportDialog: React.FC<SkillImportDialogProps> = ({
       setCollections(collectionsData);
     } catch (error) {
       console.error('Error loading collections:', error);
+    }
+  };
+
+  const loadCareerSkills = async () => {
+    try {
+      setLoadingCareerSkills(true);
+      // Import career service dynamically to avoid circular dependencies
+      const { careerService } = await import('../../services/career/career.service');
+      const career = await careerService.getCareer(careerPath!);
+      
+      if (career && career.skills && career.skills.length > 0) {
+        const formattedSkills: ImportSkill[] = career.skills.map((skill, index) => ({
+          id: skill.skillId || `career_skill_${index}`,
+          name: skill.skillName || `Skill ${index + 1}`,
+          description: `${skill.skillType} skill for ${career.title} (${skill.proficiencyLevel}/5 required)`,
+          category: skill.skillType || 'general',
+          level: skill.proficiencyLevel || 1,
+          xpReward: (skill.proficiencyLevel || 1) * 10,
+          prerequisites: index === 0 ? [] : [career.skills[index - 1]?.skillId || `career_skill_${index - 1}`],
+          starType: skill.proficiencyLevel && skill.proficiencyLevel >= 4 ? 'giant' : 
+                   skill.proficiencyLevel === 5 ? 'supergiant' :
+                   skill.proficiencyLevel === 1 ? 'dwarf' : 'main-sequence',
+          source: 'career_database',
+          usageCount: skill.estimatedHours || 0,
+          careerTitle: career.title,
+        }));
+        setCareerSkills(formattedSkills);
+      } else {
+        setCareerSkills([]);
+      }
+    } catch (error) {
+      console.error('Error loading career skills:', error);
+      setCareerSkills([]);
+    } finally {
+      setLoadingCareerSkills(false);
     }
   };
 
@@ -143,7 +187,9 @@ const SkillImportDialog: React.FC<SkillImportDialogProps> = ({
       setLoading(true);
       setImportProgress(0);
       
-      const skillsToImport = availableSkills.filter(skill => selectedSkills.has(skill.id));
+      // Combine skills from both sources (career skills and Firestore skills)
+      const allAvailableSkills = [...availableSkills, ...careerSkills];
+      const skillsToImport = allAvailableSkills.filter(skill => selectedSkills.has(skill.id));
       
       // Simulate progress for better UX
       for (let i = 0; i <= 100; i += 10) {
@@ -340,12 +386,117 @@ const SkillImportDialog: React.FC<SkillImportDialogProps> = ({
     </Box>
   );
 
+
+  const renderCareerSkillsTab = () => (
+    <Box>
+      <Typography variant="h6" gutterBottom>
+        {careerName} Skills
+      </Typography>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+        These are the skills defined for the {careerName} career path in your database.
+        They will be automatically imported and positioned in the constellation.
+      </Typography>
+
+      {loadingCareerSkills ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress />
+        </Box>
+      ) : careerSkills.length === 0 ? (
+        <Alert severity="info" sx={{ mb: 2 }}>
+          No skills found for this career path in the database.
+        </Alert>
+      ) : (
+        <>
+          <Box sx={{ mb: 2, display: 'flex', gap: 1, alignItems: 'center', flexWrap: 'wrap' }}>
+            <Button
+              size="small"
+              onClick={() => {
+                const allCareerSkillIds = careerSkills.map(s => s.id);
+                const hasAll = allCareerSkillIds.every(id => selectedSkills.has(id));
+                setSelectedSkills(prev => {
+                  const newSet = new Set(prev);
+                  if (hasAll) {
+                    allCareerSkillIds.forEach(id => newSet.delete(id));
+                  } else {
+                    allCareerSkillIds.forEach(id => newSet.add(id));
+                  }
+                  return newSet;
+                });
+              }}
+            >
+              {careerSkills.every(skill => selectedSkills.has(skill.id)) ? 'Deselect All Career Skills' : 'Select All Career Skills'}
+            </Button>
+          </Box>
+
+          <List sx={{ maxHeight: 400, overflow: 'auto' }}>
+            {careerSkills.map((skill) => (
+              <ListItem
+                key={skill.id}
+                button
+                onClick={() => handleSkillToggle(skill.id)}
+                sx={{ 
+                  border: '1px solid rgba(0, 177, 98, 0.3)',
+                  mb: 1,
+                  borderRadius: 1,
+                  backgroundColor: selectedSkills.has(skill.id) ? 'rgba(0, 177, 98, 0.1)' : 'rgba(0, 177, 98, 0.05)',
+                }}
+              >
+                <Checkbox
+                  checked={selectedSkills.has(skill.id)}
+                  onChange={() => handleSkillToggle(skill.id)}
+                  sx={{ mr: 1, color: '#00B162' }}
+                />
+                <ListItemText
+                  primary={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <Typography variant="subtitle2">{skill.name}</Typography>
+                      <Chip 
+                        label={skill.category} 
+                        size="small" 
+                        sx={{ backgroundColor: '#00B162', color: 'white' }}
+                      />
+                      <Chip 
+                        label={`Level ${skill.level}`} 
+                        size="small" 
+                        variant="outlined"
+                        sx={{ borderColor: '#00B162', color: '#00B162' }}
+                      />
+                    </Box>
+                  }
+                  secondary={
+                    <Box>
+                      <Typography variant="body2" color="text.secondary">
+                        {skill.description}
+                      </Typography>
+                      <Box sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+                        {skill.usageCount > 0 && (
+                          <Typography variant="caption">
+                            Est. Hours: {skill.usageCount}
+                          </Typography>
+                        )}
+                        <Typography variant="caption">
+                          From: {skill.careerTitle}
+                        </Typography>
+                      </Box>
+                    </Box>
+                  }
+                />
+              </ListItem>
+            ))}
+          </List>
+        </>
+      )}
+    </Box>
+  );
+
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <CloudDownload />
-          <Typography variant="h6">Import Skills from Firestore</Typography>
+          <Typography variant="h6">
+            Import Skills {careerName ? `for ${careerName}` : 'from Firestore'}
+          </Typography>
         </Box>
       </DialogTitle>
       
@@ -360,12 +511,25 @@ const SkillImportDialog: React.FC<SkillImportDialogProps> = ({
         )}
 
         <Tabs value={tabValue} onChange={(_, newValue) => setTabValue(newValue)} sx={{ mb: 3 }}>
+          {careerPath && careerPath !== 'general' && (
+            <Tab label={`${careerName || 'Career'} Skills (${careerSkills.length})`} />
+          )}
           <Tab label="Overview" />
           <Tab label={`Skills Browser (${filteredSkills.length})`} />
         </Tabs>
 
-        {tabValue === 0 && renderOverviewTab()}
-        {tabValue === 1 && renderSkillsTab()}
+        {careerPath && careerPath !== 'general' ? (
+          <>
+            {tabValue === 0 && renderCareerSkillsTab()}
+            {tabValue === 1 && renderOverviewTab()}
+            {tabValue === 2 && renderSkillsTab()}
+          </>
+        ) : (
+          <>
+            {tabValue === 0 && renderOverviewTab()}
+            {tabValue === 1 && renderSkillsTab()}
+          </>
+        )}
       </DialogContent>
 
       <DialogActions>

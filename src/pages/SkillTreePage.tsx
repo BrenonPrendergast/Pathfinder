@@ -14,6 +14,7 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  TextField,
 } from '@mui/material';
 import {
   Psychology,
@@ -40,6 +41,7 @@ import SkillTree from '../components/SkillTree';
 import ConstellationSkillTree from '../components/ConstellationSkillTree';
 import AdminConstellationEditor from '../components/constellation/AdminConstellationEditor';
 import { useAuth } from '../contexts/AuthContext';
+import { careerService } from '../services/career/career.service';
 import GamingBackground from '../components/backgrounds/GamingBackground';
 import FloatingNodes from '../components/backgrounds/FloatingNodes';
 import InteractiveSpotlight from '../components/backgrounds/InteractiveSpotlight';
@@ -118,6 +120,9 @@ const careerMetadata: Record<string, {
 
 const SkillTreePage: React.FC = () => {
   const { userProfile, isAdmin } = useAuth();
+  const [allCareers, setAllCareers] = useState<any[]>([]);
+  const [loadingCareers, setLoadingCareers] = useState(false);
+  const [careerSearchTerm, setCareerSearchTerm] = useState('');
   
   // Function to render Lucide icon based on metadata
   const renderIcon = (metadata: typeof careerMetadata[string]) => {
@@ -197,52 +202,52 @@ const SkillTreePage: React.FC = () => {
   const [adminEditMode, setAdminEditMode] = useState(false);
   const [adminSelectedCareer, setAdminSelectedCareer] = useState<string>('general');
 
-  // Comprehensive admin career options
-  const adminCareerOptions = useMemo(() => [
-    { id: 'general', name: 'General Skills', icon: <Psychology />, description: 'Foundational skills for any career path' },
-    
-    // Software Development
-    { id: 'software-developer', name: 'Software Developer', icon: renderIcon(careerMetadata['software-developer']), description: 'Full-stack development and programming' },
-    { id: 'software-engineer', name: 'Software Engineer', icon: renderIcon(careerMetadata['software-engineer']), description: 'Software engineering and architecture' },
-    { id: 'web-developer', name: 'Web Developer', icon: renderIcon(careerMetadata['web-developer']), description: 'Web development and frontend/backend' },
-    { id: 'mobile-developer', name: 'Mobile Developer', icon: renderIcon(careerMetadata['mobile-developer']), description: 'Mobile app development' },
-    { id: 'devops-engineer', name: 'DevOps Engineer', icon: renderIcon(careerMetadata['devops-engineer']), description: 'DevOps and infrastructure' },
-    
-    // Data & Analytics
-    { id: 'data-scientist', name: 'Data Scientist', icon: renderIcon(careerMetadata['data-scientist']), description: 'Data analysis and machine learning' },
-    { id: 'data-analyst', name: 'Data Analyst', icon: renderIcon(careerMetadata['data-analyst']), description: 'Data analysis and visualization' },
-    { id: 'business-analyst', name: 'Business Analyst', icon: renderIcon(careerMetadata['business-analyst']), description: 'Business analysis and strategy' },
-    { id: 'research-scientist', name: 'Research Scientist', icon: renderIcon(careerMetadata['research-scientist']), description: 'Scientific research and analysis' },
-    
-    // Design & Creative
-    { id: 'ux-designer', name: 'UX Designer', icon: renderIcon(careerMetadata['ux-designer']), description: 'User experience design' },
-    { id: 'ui-designer', name: 'UI Designer', icon: renderIcon(careerMetadata['ui-designer']), description: 'User interface design' },
-    { id: 'graphic-designer', name: 'Graphic Designer', icon: renderIcon(careerMetadata['graphic-designer']), description: 'Graphic and visual design' },
-    { id: 'photographer', name: 'Photographer', icon: renderIcon(careerMetadata['photographer']), description: 'Photography and visual media' },
-    
-    // Business & Management
-    { id: 'project-manager', name: 'Project Manager', icon: renderIcon(careerMetadata['project-manager']), description: 'Project management and coordination' },
-    { id: 'product-manager', name: 'Product Manager', icon: renderIcon(careerMetadata['product-manager']), description: 'Product strategy and development' },
-    { id: 'business-manager', name: 'Business Manager', icon: renderIcon(careerMetadata['business-manager']), description: 'Business management and operations' },
-    { id: 'marketing-manager', name: 'Marketing Manager', icon: renderIcon(careerMetadata['marketing-manager']), description: 'Marketing and brand management' },
-    
-    // Healthcare
-    { id: 'doctor', name: 'Doctor', icon: renderIcon(careerMetadata['doctor']), description: 'Medical practice and patient care' },
-    { id: 'nurse', name: 'Nurse', icon: renderIcon(careerMetadata['nurse']), description: 'Nursing and patient care' },
-    { id: 'therapist', name: 'Therapist', icon: renderIcon(careerMetadata['therapist']), description: 'Therapy and mental health' },
-    
-    // Education & Training
-    { id: 'teacher', name: 'Teacher', icon: renderIcon(careerMetadata['teacher']), description: 'Education and teaching' },
-    { id: 'trainer', name: 'Trainer', icon: renderIcon(careerMetadata['trainer']), description: 'Training and development' },
-    
-    // Legal & Finance
-    { id: 'lawyer', name: 'Lawyer', icon: renderIcon(careerMetadata['lawyer']), description: 'Legal practice and consultation' },
-    { id: 'accountant', name: 'Accountant', icon: renderIcon(careerMetadata['accountant']), description: 'Accounting and financial management' },
-    
-    // Engineering & Technical
-    { id: 'engineer', name: 'Engineer', icon: renderIcon(careerMetadata['engineer']), description: 'Engineering and technical design' },
-    { id: 'mechanic', name: 'Mechanic', icon: renderIcon(careerMetadata['mechanic']), description: 'Mechanical repair and maintenance' },
-  ], []);
+  // Load all careers for admin dropdown
+  useEffect(() => {
+    if (isAdmin()) {
+      loadAllCareers();
+    }
+  }, [isAdmin]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const loadAllCareers = async () => {
+    try {
+      setLoadingCareers(true);
+      const careers = await careerService.getAllCareers();
+      setAllCareers(careers);
+    } catch (error) {
+      console.error('Error loading careers for admin dropdown:', error);
+    } finally {
+      setLoadingCareers(false);
+    }
+  };
+
+  // Dynamic admin career options that include all careers from database with search filtering
+  const adminCareerOptions = useMemo(() => {
+    const options = [
+      { id: 'general', name: 'General Skills', icon: <Psychology />, description: 'Foundational skills for any career path' }
+    ];
+
+    // Filter careers based on search term
+    const filteredCareers = careerSearchTerm 
+      ? allCareers.filter(career => 
+          career.title.toLowerCase().includes(careerSearchTerm.toLowerCase()) ||
+          (career.description && career.description.toLowerCase().includes(careerSearchTerm.toLowerCase()))
+        )
+      : allCareers;
+
+    // Add filtered careers from database
+    filteredCareers.forEach((career) => {
+      const metadata = careerMetadata[career.id] || careerMetadata['default'];
+      options.push({
+        id: career.id,
+        name: career.title,
+        icon: renderIcon(metadata),
+        description: career.description || `Skills for ${career.title} career path`
+      });
+    });
+
+    return options;
+  }, [allCareers, careerSearchTerm]);
 
   const getAdminCareerName = () => {
     const career = adminCareerOptions.find(c => c.id === adminSelectedCareer);
@@ -277,110 +282,140 @@ const SkillTreePage: React.FC = () => {
       <InteractiveSpotlight size="large" intensity="subtle" color="primary" />
 
       <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 10 }}>
-        <Box sx={{ py: { xs: 4, md: 6 } }}>
+        <Box sx={{ py: { xs: 2, md: 3 } }}>
 
-          {/* Mode Toggles */}
-          <Box sx={{ mb: 3, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <Box sx={{ display: 'flex', gap: 2, flexWrap: 'wrap', justifyContent: 'center' }}>
-              {/* Admin Edit Mode Toggle */}
-              {isAdmin() && (
-                <FormControlLabel
-                  control={
-                    <Switch
-                      checked={adminEditMode}
-                      onChange={(e) => handleAdminEditModeChange(e.target.checked)}
-                      sx={{
-                        '& .MuiSwitch-switchBase.Mui-checked': {
-                          color: '#ef4444',
-                          '&:hover': {
-                            backgroundColor: 'rgba(239, 68, 68, 0.08)',
-                          },
-                        },
-                        '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                          backgroundColor: '#ef4444',
-                        },
-                      }}
-                    />
-                  }
-                  label="Admin Edit Mode 🔧"
-                  sx={{ 
-                    color: adminEditMode ? '#ef4444' : 'inherit',
-                    fontWeight: adminEditMode ? 600 : 'normal',
-                  }}
-                />
-              )}
-
-              {/* Admin Career Path Selector */}
-              {isAdmin() && adminEditMode && (
-                <FormControl 
-                  size="small" 
-                  sx={{ 
-                    minWidth: 200,
-                    '& .MuiOutlinedInput-root': {
-                      '& fieldset': {
-                        borderColor: '#6366f1',
-                      },
-                      '&:hover fieldset': {
-                        borderColor: '#6366f1',
-                      },
-                      '&.Mui-focused fieldset': {
-                        borderColor: '#6366f1',
-                      },
-                    },
-                    '& .MuiInputLabel-root': {
-                      color: '#6366f1',
-                      '&.Mui-focused': {
-                        color: '#6366f1',
-                      },
-                    },
-                  }}
-                >
-                  <InputLabel>Edit Career Path</InputLabel>
-                  <Select
-                    value={adminSelectedCareer}
-                    label="Edit Career Path"
-                    onChange={(e) => setAdminSelectedCareer(e.target.value)}
-                  >
-                    {adminCareerOptions.map((career) => (
-                      <MenuItem key={career.id} value={career.id}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          {career.icon}
-                          <Typography>{career.name}</Typography>
-                        </Box>
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              )}
-              
+          {/* Admin Controls - Compact Top Right */}
+          {isAdmin() && (
+            <Box sx={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              zIndex: 1000,
+              display: 'flex',
+              flexDirection: adminEditMode ? 'column' : 'row',
+              gap: 1,
+              p: adminEditMode ? 1.5 : 1,
+              backgroundColor: 'rgba(31, 41, 55, 0.95)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(99, 102, 241, 0.3)',
+              borderRadius: 1,
+              minWidth: adminEditMode ? 240 : 'auto',
+              alignItems: adminEditMode ? 'stretch' : 'center',
+            }}>
+              {/* Admin Toggle */}
               <FormControlLabel
                 control={
                   <Switch
-                    checked={constellationMode}
-                    onChange={(e) => setConstellationMode(e.target.checked)}
-                    disabled={adminEditMode}
+                    checked={adminEditMode}
+                    onChange={(e) => handleAdminEditModeChange(e.target.checked)}
+                    size="small"
                     sx={{
                       '& .MuiSwitch-switchBase.Mui-checked': {
-                        color: '#fbbf24',
+                        color: '#ef4444',
                         '&:hover': {
-                          backgroundColor: 'rgba(251, 191, 36, 0.08)',
+                          backgroundColor: 'rgba(239, 68, 68, 0.08)',
                         },
                       },
                       '& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track': {
-                        backgroundColor: '#fbbf24',
+                        backgroundColor: '#ef4444',
                       },
                     }}
                   />
                 }
-                label="Constellation View ✨"
+                label={adminEditMode ? "Admin Mode" : "Admin"}
                 sx={{ 
-                  color: constellationMode ? '#fbbf24' : 'inherit',
-                  fontWeight: constellationMode ? 600 : 'normal',
-                  opacity: adminEditMode ? 0.5 : 1,
+                  color: adminEditMode ? '#ef4444' : 'white',
+                  fontWeight: adminEditMode ? 600 : 'normal',
+                  fontSize: '0.8rem',
+                  margin: 0,
+                  minWidth: 'auto',
                 }}
               />
+
+              {/* Admin Search & Dropdown - Only show when in edit mode */}
+              {adminEditMode && (
+                <>
+                  <TextField
+                    size="small"
+                    placeholder={`Search careers...`}
+                    value={careerSearchTerm}
+                    onChange={(e) => setCareerSearchTerm(e.target.value)}
+                    sx={{
+                      minWidth: 160,
+                      '& .MuiOutlinedInput-root': {
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        height: 32,
+                        '& fieldset': {
+                          borderColor: 'rgba(99, 102, 241, 0.5)',
+                        },
+                        '&:hover fieldset': {
+                          borderColor: '#6366f1',
+                        },
+                        '&.Mui-focused fieldset': {
+                          borderColor: '#6366f1',
+                        },
+                        '& input': {
+                          color: 'white',
+                          fontSize: '0.75rem',
+                          py: 0.5,
+                        },
+                      },
+                    }}
+                  />
+                  
+                  <FormControl size="small" sx={{ minWidth: 160 }}>
+                    <InputLabel sx={{ color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.75rem' }}>
+                      {loadingCareers ? 'Loading...' : 'Career'}
+                    </InputLabel>
+                    <Select
+                      value={adminSelectedCareer}
+                      label={loadingCareers ? 'Loading...' : 'Career'}
+                      onChange={(e) => setAdminSelectedCareer(e.target.value)}
+                      disabled={loadingCareers}
+                      sx={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+                        color: 'white',
+                        fontSize: '0.75rem',
+                        height: 32,
+                        '& .MuiOutlinedInput-notchedOutline': {
+                          borderColor: 'rgba(99, 102, 241, 0.5)',
+                        },
+                        '&:hover .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#6366f1',
+                        },
+                        '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
+                          borderColor: '#6366f1',
+                        },
+                        '& .MuiSelect-icon': {
+                          color: 'rgba(255, 255, 255, 0.7)',
+                        },
+                      }}
+                      MenuProps={{
+                        PaperProps: {
+                          style: {
+                            maxHeight: 300,
+                            backgroundColor: 'rgba(31, 41, 55, 0.95)',
+                            backdropFilter: 'blur(10px)',
+                          },
+                        },
+                      }}
+                    >
+                      {adminCareerOptions.map((career) => (
+                        <MenuItem key={career.id} value={career.id} sx={{ color: 'white', fontSize: '0.85rem' }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                            {career.icon}
+                            <Typography sx={{ fontWeight: career.id === 'general' ? 600 : 400, fontSize: '0.85rem' }}>
+                              {career.name}
+                            </Typography>
+                          </Box>
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </>
+              )}
             </Box>
-          </Box>
+          )}
       
           {/* Career Path Tabs */}
           {availableSkillPaths.length > 1 ? (
@@ -467,14 +502,15 @@ const SkillTreePage: React.FC = () => {
             <AdminConstellationEditor
               careerPath={adminSelectedCareer}
               careerName={getAdminCareerName()}
-              onSave={(nodes, edges) => {
-                console.log('Admin saved changes:', nodes, edges);
+              adminEditMode={adminEditMode}
+              onManualSave={(nodes, edges) => {
+                console.log('Admin manually saved changes:', nodes, edges);
                 setAdminEditMode(false);
               }}
               onCancel={() => setAdminEditMode(false)}
             />
-          ) : constellationMode ? (
-            // Use constellation-style skill tree
+          ) : (
+            // Use constellation-style skill tree (now the standard view)
             <ConstellationSkillTree 
               careerPath={availableSkillPaths[tabValue]?.id || 'general'}
               careerName={availableSkillPaths[tabValue]?.name}
@@ -485,13 +521,6 @@ const SkillTreePage: React.FC = () => {
                 console.log(`Skill ${skillId} unlocked!`);
               }}
             />
-          ) : (
-            // Use original Material-UI based skill trees
-            availableSkillPaths.map((path, index) => (
-              <TabPanel key={path.id} value={tabValue} index={index}>
-                <SkillTree careerPath={path.id} />
-              </TabPanel>
-            ))
           )}
         </Box>
       </Container>

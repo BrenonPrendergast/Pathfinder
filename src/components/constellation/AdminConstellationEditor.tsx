@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   ReactFlow,
   MiniMap,
@@ -87,7 +87,9 @@ const adminEdgeTypes = {
 interface AdminConstellationEditorProps {
   careerPath?: string;
   careerName?: string;
+  adminEditMode?: boolean;
   onSave?: (nodes: Node[], edges: Edge[]) => void;
+  onManualSave?: (nodes: Node[], edges: Edge[]) => void;
   onCancel?: () => void;
 }
 
@@ -105,7 +107,9 @@ interface SkillEditData {
 const AdminConstellationEditor: React.FC<AdminConstellationEditorProps> = ({
   careerPath = 'general',
   careerName,
+  adminEditMode = true,
   onSave,
+  onManualSave,
   onCancel
 }) => {
   const { userProfile, isAdmin } = useAuth();
@@ -147,6 +151,11 @@ const AdminConstellationEditor: React.FC<AdminConstellationEditorProps> = ({
     'supergiant': '#ef4444',
     'dwarf': '#8b5cf6'
   });
+  
+  // Auto-save state
+  const [isAutoSaving, setIsAutoSaving] = useState(false);
+  const [autoSaveDisabled, setAutoSaveDisabled] = useState(false);
+  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Grid snapping is now handled natively by React Flow with snapToGrid and snapGrid props
 
@@ -157,6 +166,43 @@ const AdminConstellationEditor: React.FC<AdminConstellationEditorProps> = ({
       setIsEditing(true);
     }
   }, [careerPath, isAdmin]);
+
+  // Disable auto-save when exiting admin edit mode
+  useEffect(() => {
+    if (!adminEditMode) {
+      // Clear any pending auto-save when exiting admin mode
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+        autoSaveTimeoutRef.current = null;
+      }
+      setIsAutoSaving(false);
+      setAutoSaveDisabled(true);
+      console.log('🚫 Auto-save disabled: Exited admin edit mode');
+    } else {
+      setAutoSaveDisabled(false);
+      console.log('✅ Auto-save enabled: Entered admin edit mode');
+    }
+  }, [adminEditMode]);
+
+  // Cleanup auto-save timeout on unmount or career path change
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+        autoSaveTimeoutRef.current = null;
+      }
+      setIsAutoSaving(false);
+    };
+  }, [careerPath]); // Clear when career path changes
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Update node data when connection mode, first selected node, scale, or colors change
   useEffect(() => {
@@ -689,9 +735,145 @@ const AdminConstellationEditor: React.FC<AdminConstellationEditorProps> = ({
     showMessage(`Aligned ${selectedNodes.length} node(s) to grid`, 'success');
   };
 
-  // Save operations
+  // Auto-save function (debounced)
+  const autoSave = useCallback(async (nodesToSave: Node[], edgesToSave: Edge[]) => {
+    try {
+      console.log('🔄 Auto-save triggered:', { 
+        careerPath, 
+        nodeCount: nodesToSave.length, 
+        edgeCount: edgesToSave.length,
+        timestamp: new Date().toISOString()
+      });
+
+      // Validate inputs
+      if (!careerPath) {
+        console.warn('⚠️ Auto-save cancelled: No career path provided');
+        setIsAutoSaving(false);
+        return;
+      }
+
+      if (!nodesToSave || nodesToSave.length === 0) {
+        console.warn('⚠️ Auto-save cancelled: No nodes to save');
+        setIsAutoSaving(false);
+        return;
+      }
+
+      // Convert nodes and edges back to skill format with position data preserved
+      const skillsData = nodesToSave.map(node => {
+        if (!node.data) {
+          console.error('❌ Invalid node data:', node);
+          throw new Error(`Node ${node.id} has no data`);
+        }
+        
+        return {
+          id: node.data.id,
+          name: node.data.name,
+          description: node.data.description || '',
+          level: node.data.level || 1,
+          category: node.data.category || 'General',
+          xpReward: node.data.xpReward || 10,
+          prerequisites: edgesToSave
+            .filter(edge => edge.target === node.id)
+            .map(edge => edge.source),
+          starType: node.data.starType || 'main-sequence',
+          constellation: careerPath,
+          // Preserve position data for constellation layout
+          position: {
+            x: node.position.x,
+            y: node.position.y
+          },
+          // Preserve admin scaling settings
+          nodeScale: node.data.nodeScale || 1,
+          textScale: node.data.textScale || 1
+        };
+      });
+
+      console.log('💾 Saving constellation data to Firebase...', { 
+        careerPath, 
+        skillCount: skillsData.length 
+      });
+      
+      // Save to Firebase with timeout
+      const savePromise = skillService.saveSkillConstellation(careerPath, skillsData);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Auto-save timeout after 10 seconds')), 10000)
+      );
+      
+      await Promise.race([savePromise, timeoutPromise]);
+      console.log('✅ Auto-save successful');
+      
+      // Don't call onSave callback for auto-save to prevent parent state changes
+      // onSave is only called for manual saves
+      console.log('ℹ️ Auto-save completed, skipping onSave callback to prevent state changes');
+      
+      setIsAutoSaving(false);
+    } catch (error) {
+      console.error('❌ Auto-save failed:', {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        careerPath,
+        nodeCount: nodesToSave.length,
+        timestamp: new Date().toISOString()
+      });
+      setIsAutoSaving(false);
+      
+      // Show error notification for critical failures
+      if (error instanceof Error && error.message.includes('timeout')) {
+        showError('Auto-save timeout - please save manually', 'Auto-save Failed');
+      }
+    }
+  }, [careerPath, showError]);
+
+  // Debounced auto-save trigger
+  const triggerAutoSave = useCallback(() => {
+    // Don't trigger auto-save if disabled or not in admin mode
+    if (autoSaveDisabled || !isAdmin() || !adminEditMode) {
+      console.log('⏸️ Auto-save skipped:', { 
+        autoSaveDisabled, 
+        isAdmin: isAdmin(), 
+        adminEditMode 
+      });
+      return;
+    }
+
+    // Don't trigger if already auto-saving
+    if (isAutoSaving) {
+      console.log('⏸️ Auto-save skipped: Already in progress');
+      return;
+    }
+
+    console.log('⏰ Auto-save triggered, will execute in 3 seconds...');
+
+    // Clear existing timeout
+    if (autoSaveTimeoutRef.current) {
+      clearTimeout(autoSaveTimeoutRef.current);
+    }
+    
+    // Set auto-saving state
+    setIsAutoSaving(true);
+    
+    // Set new timeout for auto-save (3 seconds to avoid rapid firing)
+    autoSaveTimeoutRef.current = setTimeout(() => {
+      // Double-check we're still in admin mode before executing
+      if (!adminEditMode || autoSaveDisabled) {
+        console.log('🛑 Auto-save cancelled: Mode changed during timeout');
+        setIsAutoSaving(false);
+        return;
+      }
+      
+      console.log('🚀 Executing auto-save with current state...');
+      autoSave(nodes, edges);
+    }, 3000);
+  }, [autoSave, nodes, edges, isAdmin, adminEditMode, isAutoSaving, autoSaveDisabled]);
+
+  // Manual save operations
   const handleSaveChanges = async () => {
     try {
+      // Cancel auto-save if in progress
+      if (autoSaveTimeoutRef.current) {
+        clearTimeout(autoSaveTimeoutRef.current);
+      }
+      
       showInfo('Saving constellation changes...', 'Saving');
       
       // Convert nodes and edges back to skill format with position data preserved
@@ -711,25 +893,28 @@ const AdminConstellationEditor: React.FC<AdminConstellationEditorProps> = ({
         position: {
           x: node.position.x,
           y: node.position.y
-        }
+        },
+        // Preserve admin scaling settings
+        nodeScale: node.data.nodeScale || 1,
+        textScale: node.data.textScale || 1
       }));
 
-      console.log('Saving constellation data:', { careerPath, skillsData, totalNodes: nodes.length, totalEdges: edges.length });
+      console.log('Manual saving constellation data:', { careerPath, skillsData, totalNodes: nodes.length, totalEdges: edges.length });
       
       // Save to Firebase
       await skillService.saveSkillConstellation(careerPath, skillsData);
-      console.log('Successfully saved to Firestore');
+      console.log('Manual save successful');
       
-      // Reload data to verify save and update UI
-      console.log('Reloading data to verify save...');
-      await loadSkillsForEditing();
-      
-      onSave?.(nodes, edges);
+      // Don't reload data to avoid state reset and page jumps
+      // Call onManualSave for manual saves (this may exit admin mode)
+      onManualSave?.(nodes, edges);
       const displayName = careerName || careerPath;
       showSuccess(`Successfully saved ${skillsData.length} skills to constellation`, `${displayName} Saved`);
+      setIsAutoSaving(false);
     } catch (error) {
-      console.error('Save error:', error);
+      console.error('Manual save error:', error);
       showError(`Error saving changes: ${error instanceof Error ? error.message : 'Unknown error'}`, 'Save Failed');
+      setIsAutoSaving(false);
     }
   };
 
@@ -761,7 +946,7 @@ const AdminConstellationEditor: React.FC<AdminConstellationEditorProps> = ({
     console.log('Connection end:', event);
   }, []);
 
-  // Enhanced node/edge change handlers
+  // Enhanced node/edge change handlers with auto-save
   const handleNodesChange = (changes: NodeChange[]) => {
     // React Flow handles snapping natively with snapToGrid and snapGrid props
     onNodesChange(changes);
@@ -771,6 +956,20 @@ const AdminConstellationEditor: React.FC<AdminConstellationEditorProps> = ({
     if (selectionChanges.length > 0) {
       const selected = nodes.filter(node => node.selected);
       setSelectedNodes(selected);
+    }
+    
+    // Trigger auto-save for position changes, additions, or deletions
+    const shouldAutoSave = changes.some(change => 
+      change.type === 'position' || 
+      change.type === 'add' || 
+      change.type === 'remove'
+    );
+    
+    if (shouldAutoSave && nodes.length > 0) {
+      // Use setTimeout to allow React Flow to process changes first
+      setTimeout(() => {
+        triggerAutoSave();
+      }, 100);
     }
   };
 
@@ -782,6 +981,19 @@ const AdminConstellationEditor: React.FC<AdminConstellationEditorProps> = ({
     if (selectionChanges.length > 0) {
       const selected = edges.filter(edge => edge.selected);
       setSelectedEdges(selected);
+    }
+    
+    // Trigger auto-save for edge additions or deletions
+    const shouldAutoSave = changes.some(change => 
+      change.type === 'add' || 
+      change.type === 'remove'
+    );
+    
+    if (shouldAutoSave) {
+      // Use setTimeout to allow React Flow to process changes first
+      setTimeout(() => {
+        triggerAutoSave();
+      }, 100);
     }
   };
 
@@ -795,23 +1007,17 @@ const AdminConstellationEditor: React.FC<AdminConstellationEditorProps> = ({
 
   return (
     <Box sx={{ height: '90vh', width: '100%', position: 'relative' }}>
-      {/* Admin Toolbar - Left Side Vertical */}
-      <Paper sx={{
-        position: 'absolute',
-        top: 120,
-        left: 16,
-        zIndex: 1000,
-        p: 1.5,
+      {/* Admin Controls - Left Side Vertical */}
+      <Box sx={{ 
+        position: 'absolute', 
+        top: '50%',
+        left: 16, 
+        transform: 'translateY(-50%)',
+        zIndex: 10,
         display: 'flex',
         flexDirection: 'column',
         gap: 1,
-        alignItems: 'center',
-        background: 'rgba(31, 41, 55, 0.95)',
-        backdropFilter: 'blur(10px)',
-        borderRadius: 2,
-        maxHeight: 'calc(100vh - 160px)',
-        overflowY: 'auto',
-        border: '1px solid rgba(99, 102, 241, 0.3)',
+        alignItems: 'center'
       }}>
         <Tooltip 
           title="Add New Skill"
@@ -969,21 +1175,34 @@ const AdminConstellationEditor: React.FC<AdminConstellationEditorProps> = ({
 
         <Divider sx={{ width: '100%', bgcolor: 'rgba(99, 102, 241, 0.3)' }} />
 
-        <Tooltip title="Save Changes">
+        <Tooltip title={isAutoSaving ? "Auto-saving..." : "Save Changes"}>
           <IconButton 
             onClick={handleSaveChanges}
             size="small"
+            disabled={isAutoSaving}
             sx={{
-              backgroundColor: '#00B162',
+              backgroundColor: isAutoSaving ? '#f59e0b' : '#00B162',
               color: 'white',
               '&:hover': {
-                backgroundColor: '#009654',
+                backgroundColor: isAutoSaving ? '#f59e0b' : '#009654',
               }
             }}
           >
             <Save />
           </IconButton>
         </Tooltip>
+
+        {isAutoSaving && (
+          <Typography variant="caption" sx={{ 
+            color: '#f59e0b', 
+            fontSize: '0.6rem',
+            fontWeight: 600,
+            textAlign: 'center',
+            width: '100%'
+          }}>
+            Auto-saving...
+          </Typography>
+        )}
 
         <Tooltip title="Cancel">
           <IconButton 
@@ -1000,7 +1219,7 @@ const AdminConstellationEditor: React.FC<AdminConstellationEditorProps> = ({
             <Close />
           </IconButton>
         </Tooltip>
-      </Paper>
+      </Box>
 
       {/* Constellation Editor Heading */}
       <Paper sx={{
@@ -1025,14 +1244,6 @@ const AdminConstellationEditor: React.FC<AdminConstellationEditorProps> = ({
           backgroundClip: 'text',
         }}>
           {careerPath === 'general' ? 'General Skills Constellation' : `${careerName || careerPath} Career Constellation`}
-        </Typography>
-        <Typography variant="body2" sx={{ 
-          color: 'rgba(255, 255, 255, 0.7)', 
-          textAlign: 'center',
-          fontSize: '0.85rem',
-          mt: 0.5,
-        }}>
-          {careerPath === 'general' ? 'Editing soft skills and general competencies' : `Editing skills for ${careerName || careerPath} career path`}
         </Typography>
       </Paper>
 
@@ -1268,9 +1479,12 @@ const AdminConstellationEditor: React.FC<AdminConstellationEditorProps> = ({
         snapToGrid={true}
         snapGrid={[gridSize, gridSize]}
         fitView
-        fitViewOptions={{ padding: 0.2 }}
-        minZoom={0.1}
-        maxZoom={2}
+        fitViewOptions={{ padding: 0.1, includeHiddenNodes: false }}
+        minZoom={1}
+        maxZoom={1}
+        zoomOnScroll={false}
+        zoomOnPinch={false}
+        zoomOnDoubleClick={false}
         selectNodesOnDrag={false}
         selectionMode={SelectionMode.Partial}
         multiSelectionKeyCode="Shift"
@@ -1283,20 +1497,12 @@ const AdminConstellationEditor: React.FC<AdminConstellationEditorProps> = ({
         }}
       >
         <Controls 
+          showZoom={false}
+          showInteractive={false}
           style={{
             backgroundColor: 'rgba(31, 41, 55, 0.8)',
             border: '1px solid rgba(99, 102, 241, 0.5)',
             borderRadius: '8px',
-          }}
-        />
-        <MiniMap 
-          style={{
-            backgroundColor: 'rgba(31, 41, 55, 0.8)',
-            border: '1px solid rgba(99, 102, 241, 0.5)',
-          }}
-          nodeColor={(node) => {
-            if (node.selected) return '#fbbf24';
-            return '#6366f1';
           }}
         />
         {/* Visual grid removed - using React Flow's built-in snap grid only */}
@@ -1308,6 +1514,8 @@ const AdminConstellationEditor: React.FC<AdminConstellationEditorProps> = ({
         onClose={() => setShowImportDialog(false)}
         onImport={handleImportSkills}
         existingSkillIds={nodes.map(node => node.id)}
+        careerPath={careerPath}
+        careerName={careerName}
       />
 
       {/* Connection Tutorial Wizard */}
